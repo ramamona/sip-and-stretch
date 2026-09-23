@@ -67,9 +67,11 @@ final class NudgeController {
         let nudge = queue.remove(at: index)
         current = nudge
 
-        let card = NudgeCardView(nudge: nudge) { [weak self] in self?.close(nudge) }
+        let swipe = CardSwipe()
+        let card = NudgeCardView(nudge: nudge, swipe: swipe) { [weak self] in self?.close(nudge) }
             .environment(model)
         let hosting = ClickThroughHostingView(rootView: card)
+        hosting.swipe = swipe
         let size = NudgeCardView.panelSize
         hosting.frame = NSRect(origin: .zero, size: size)
 
@@ -144,7 +146,7 @@ final class NudgePanel: NSPanel {
         backgroundColor = .clear
         isOpaque = false
         hasShadow = false // the SwiftUI card draws its own
-        isMovableByWindowBackground = true
+        isMovableByWindowBackground = false // dragging a card swipes it away instead
         hidesOnDeactivate = false
         isReleasedWhenClosed = false
         animationBehavior = .none
@@ -155,6 +157,38 @@ final class NudgePanel: NSPanel {
 }
 
 /// Buttons respond to the very first click, even while another app is active.
+/// Also turns a horizontal two-finger trackpad swipe into `CardSwipe` updates, like a notification banner.
 final class ClickThroughHostingView<Content: View>: NSHostingView<Content> {
+    var swipe: CardSwipe?
+    private var swiping = false
+
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
+
+    override func scrollWheel(with event: NSEvent) {
+        guard let swipe, event.hasPreciseScrollingDeltas, event.momentumPhase.isEmpty else {
+            return super.scrollWheel(with: event)
+        }
+        if event.phase == .began { swiping = abs(event.scrollingDeltaX) > abs(event.scrollingDeltaY) }
+        guard swiping else { return super.scrollWheel(with: event) }
+        // Follow the fingers whatever the "natural scrolling" setting is.
+        let fingersX = event.isDirectionInvertedFromDevice ? event.scrollingDeltaX : -event.scrollingDeltaX
+        switch event.phase {
+        case .began, .changed:
+            swipe.offset += fingersX
+        case .ended, .cancelled:
+            swiping = false
+            swipe.releases += 1
+        default:
+            break
+        }
+    }
+}
+
+/// Live trackpad-swipe state shared between the panel (AppKit) and the card (SwiftUI).
+/// Only ever touched on the main thread (event handling and view updates).
+@Observable
+final class CardSwipe {
+    var offset: CGFloat = 0
+    /// Bumped when the fingers lift, so the card can decide: dismiss or snap back.
+    var releases = 0
 }

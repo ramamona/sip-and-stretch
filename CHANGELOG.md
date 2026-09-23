@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Swipe a card toward the screen edge (trackpad or mouse drag) to dismiss it, like a notification banner.
+
 ## [1.0.0] - 2026-09-23
 
 The first release. Say hi to Drip! 💧

@@ -32,8 +32,14 @@ struct NudgeCardView: View {
     /// left waiting on screen uses no CPU.
     @ViewState private var lively = true
 
-    init(nudge: Nudge, phase: Phase = .ask, close: @escaping () -> Void) {
+    /// Trackpad swipes arrive from AppKit (see `ClickThroughHostingView`); mouse drags are handled here.
+    let swipe: CardSwipe
+    @ViewState private var dragX: CGFloat = 0
+    @ViewState private var flyOutX: CGFloat = 0
+
+    init(nudge: Nudge, phase: Phase = .ask, swipe: CardSwipe = CardSwipe(), close: @escaping () -> Void) {
         self.nudge = nudge
+        self.swipe = swipe
         self.close = close
         _phase = ViewState(wrappedValue: phase)
     }
@@ -61,6 +67,14 @@ struct NudgeCardView: View {
         .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous).strokeBorder(theme.light.opacity(0.5), lineWidth: 1))
         .shadow(color: .black.opacity(0.25), radius: 14, y: 6)
         .padding(Self.shadowPadding)
+        .offset(x: swipeOffset)
+        .opacity(1 - min(0.6, abs(swipeOffset) / 500))
+        .gesture(
+            DragGesture(minimumDistance: 8)
+                .onChanged { dragX = $0.translation.width }
+                .onEnded { endSwipe(distance: $0.translation.width, predicted: $0.predictedEndTranslation.width) }
+        )
+        .onChange(of: swipe.releases) { endSwipe(distance: swipe.offset, predicted: swipe.offset * 2) }
         .animation(.spring(response: 0.4, dampingFraction: 0.8), value: phase)
         .task(id: phase) {
             lively = true
@@ -342,14 +356,7 @@ struct NudgeCardView: View {
     }
 
     private var closeButton: some View {
-        Button {
-            switch (nudge.content, phase) {
-            case (.reminder(let kind, _), .ask), (.reminder(let kind, _), .spin), (.reminder(let kind, _), .activity): skip(kind)
-            // Bailing out during the first stretch doesn't count; later on, the break does.
-            case (.reminder(let kind, _), .guide(let index)): index > 0 ? finish(kind) : skip(kind)
-            default: close()
-            }
-        } label: {
+        Button(action: dismiss) {
             Image(systemName: "xmark")
                 .font(.system(size: 9, weight: .bold))
                 .foregroundStyle(.secondary)
@@ -359,6 +366,51 @@ struct NudgeCardView: View {
         .buttonStyle(.plain)
         .padding(10)
         .accessibilityLabel("Close")
+    }
+
+    // MARK: Swipe to dismiss
+
+    /// Which way a swipe dismisses: toward the screen edge the card came from (either way when centered).
+    private var dismissDirection: CGFloat? {
+        switch model.settings.cardPosition {
+        case .topRight, .bottomRight: 1
+        case .topLeft, .bottomLeft: -1
+        case .center: nil
+        }
+    }
+
+    /// Follows the finger toward the edge; the other way it only stretches a little, like a banner.
+    private var swipeOffset: CGFloat {
+        if flyOutX != 0 { return flyOutX }
+        let raw = dragX + swipe.offset
+        guard let direction = dismissDirection, raw * direction < 0 else { return raw }
+        return raw / 4
+    }
+
+    private func endSwipe(distance: CGFloat, predicted: CGFloat) {
+        let direction = dismissDirection ?? (distance >= 0 ? 1 : -1)
+        if distance * direction > 90 || predicted * direction > 220 {
+            withAnimation(.easeOut(duration: 0.18)) { flyOutX = direction * 520 }
+            Task {
+                try? await Task.sleep(for: .seconds(0.18))
+                dismiss()
+            }
+        } else {
+            withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
+                dragX = 0
+                swipe.offset = 0
+            }
+        }
+    }
+
+    /// Same as the × button: skip a reminder you haven't started, keep credit for a break in progress.
+    private func dismiss() {
+        switch (nudge.content, phase) {
+        case (.reminder(let kind, _), .ask), (.reminder(let kind, _), .spin), (.reminder(let kind, _), .activity): skip(kind)
+        // Bailing out during the first stretch doesn't count; later on, the break does.
+        case (.reminder(let kind, _), .guide(let index)): index > 0 ? finish(kind) : skip(kind)
+        default: close()
+        }
     }
 
     // MARK: Actions

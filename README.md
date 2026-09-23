@@ -193,7 +193,9 @@ When a reminder is due, a card slides in at your chosen corner.
 - **Eyes:** *Start* runs a 20-second countdown while you look far away. It finishes by itself.
 - **Walk:** *Going!* logs the walk. Take the idea on the card, or wander wherever you like.
 
-Cards never become the focused window, so keep typing: nothing you type goes to a card. Answer with the mouse or trackpad. You can drag a card anywhere.
+Cards never become the focused window, so keep typing: nothing you type goes to a card. Answer with the mouse or trackpad.
+
+**Swipe to dismiss**, just like a notification banner: flick a card toward the screen edge with a two-finger trackpad swipe, or drag it with the mouse. A short swipe snaps back. Swiping away counts the same as **×**.
 
 During a guided stretch, *I'm done* ends the routine early and still counts the break. Closing the card with **×** during the first stretch counts as a skip.
 
