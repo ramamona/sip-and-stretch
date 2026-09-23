@@ -27,3 +27,11 @@ scratch/
 
 # Local Claude Code state
 .claude/
+
+# Signing material: never commit (see docs/RELEASING.md)
+*.p12
+*.cer
+*.certSigningRequest
+*.p8
+*.mobileprovision
+.env

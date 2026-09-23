@@ -12,6 +12,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![macOS 14+](https://img.shields.io/badge/macOS-14%2B-black?logo=apple)](#-install)
 [![Swift](https://img.shields.io/badge/Swift-6-F05138?logo=swift&logoColor=white)](https://swift.org)
+[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-☕-FFDD00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/nareshramamourthy)
 
 </div>
 
@@ -406,6 +407,13 @@ Sip & Stretch is **100% local**. It makes no network requests, has no analytics 
 ## ⚕️ Health disclaimer
 
 Sip & Stretch is a friendly nudge, **not medical advice**. The stretches are gentle desk stretches: move slowly, stay within a comfortable range, and **stop if anything hurts**. If you have a medical condition, an injury, or specific hydration needs, talk to a healthcare professional and set your goals with them.
+
+## ☕ Support
+
+Sip & Stretch is free and always will be. If Drip saved your neck (literally), you can
+[**buy me a coffee**](https://buymeacoffee.com/nareshramamourthy). Or a glass of water. Drip would prefer water. 💧
+
+<a href="https://buymeacoffee.com/nareshramamourthy"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=☕&slug=nareshramamourthy&button_colour=FFDD00&font_colour=000000&font_family=Poppins&outline_colour=000000&coffee_colour=ffffff" alt="Buy me a coffee" height="40"></a>
 
 ## 📄 License
 

@@ -31,6 +31,9 @@ struct AboutPane: View {
                         Link("MIT License", destination: Self.repo.appending(path: "blob/main/LICENSE"))
                     }
                     .font(.rounded(12))
+                    Link("☕ Buy me a coffee", destination: URL(string: "https://buymeacoffee.com/nareshramamourthy")!)
+                        .buttonStyle(.pill(.secondary, theme: model.settings.theme))
+                        .padding(.top, 4)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 10)
