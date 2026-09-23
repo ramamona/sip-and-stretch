@@ -1,0 +1,33 @@
+name: ✨ Feature request
+description: Suggest an idea to make Sip & Stretch better.
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Got an idea? 💡 Check the [Roadmap](https://github.com/ramamona/sip-and-stretch#-roadmap) and [existing issues](https://github.com/ramamona/sip-and-stretch/issues) first. It might already be there.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+      placeholder: I often forget to log water when I drink away from my Mac...
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: What would you like to happen?
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you've considered
+      description: Workarounds, other apps, URL scheme hacks...
+  - type: checkboxes
+    id: contribute
+    attributes:
+      label: Want to build it?
+      options:
+        - label: I'd like to work on this myself (with some guidance)

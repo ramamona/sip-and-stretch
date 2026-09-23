@@ -1,0 +1,71 @@
+name: 🐛 Bug report
+description: Drip did something weird (or didn't do something it should).
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this! 💧 Please check [existing issues](https://github.com/ramamona/sip-and-stretch/issues) first.
+        Security problem? Please use the private report link instead of this form.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear description of the bug.
+      placeholder: The stretch card showed up at 21:00 even though my active hours end at 18:00.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open Settings → Active hours
+        2. Set ...
+        3. Wait for ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+  - type: input
+    id: app-version
+    attributes:
+      label: Sip & Stretch version
+      description: Finder → SipStretch.app → Get Info, or the release you downloaded. Say "main @ <commit>" if you built from source.
+      placeholder: "1.0.0"
+    validations:
+      required: true
+  - type: input
+    id: macos-version
+    attributes:
+      label: macOS version
+      placeholder: "macOS 15.5 (Apple Silicon)"
+    validations:
+      required: true
+  - type: dropdown
+    id: delivery
+    attributes:
+      label: Delivery style
+      options:
+        - Nudge card
+        - System notification
+        - Both
+        - Not sure
+  - type: dropdown
+    id: install
+    attributes:
+      label: How are you running it?
+      options:
+        - Release zip from GitHub
+        - Built with make run / make install
+        - swift run
+  - type: textarea
+    id: extra
+    attributes:
+      label: Screenshots, logs, anything else
+      description: Relevant settings (active hours, DND, intervals) help a lot for timing bugs. Console.app logs for "SipStretch" are welcome too.

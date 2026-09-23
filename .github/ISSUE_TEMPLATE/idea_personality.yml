@@ -1,0 +1,77 @@
+name: 🎭 New Drip personality
+description: Pitch a new voice for Drip, with sample lines.
+title: "[Personality]: "
+labels: ["personality", "good first issue"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Drip already speaks as a Cheerful Coach 🤗, Sassy Bestie 💅, Captain Hydro 🏴‍☠️, Zen Master 🪷, Dramatic Narrator 🎭, Robo Buddy 🤖, Grandma 👵 and Gym Bro 💪.
+        Who's next? A film noir detective? A nervous houseplant? A sports commentator? Show us! 🎤
+
+        **Tips:** use `{name}` for the user's nickname and `{left}` for glasses left today (water lines only). Keep it kind and family-friendly: Drip can tease, but never shame.
+  - type: input
+    id: name
+    attributes:
+      label: Personality name
+      placeholder: Sportscaster Sam
+    validations:
+      required: true
+  - type: input
+    id: emoji
+    attributes:
+      label: Emoji
+      placeholder: 🎙️
+    validations:
+      required: true
+  - type: input
+    id: tagline
+    attributes:
+      label: Tagline (one short sentence)
+      placeholder: "Calling every sip like it's the championship final."
+    validations:
+      required: true
+  - type: textarea
+    id: water-reminders
+    attributes:
+      label: Water reminders (2+ lines)
+      placeholder: |
+        And {name} reaches for the bottle... {left} glasses to go, folks!
+        The crowd is ON ITS FEET. It's hydration time!
+    validations:
+      required: true
+  - type: textarea
+    id: stretch-reminders
+    attributes:
+      label: Stretch reminders (2+ lines)
+      placeholder: |
+        {name} is heading to the stretching zone. What a play!
+    validations:
+      required: true
+  - type: textarea
+    id: cheers
+    attributes:
+      label: Cheers after drinking or stretching
+      placeholder: |
+        GOOOOAL! Another glass down!
+  - type: textarea
+    id: snoozes
+    attributes:
+      label: Snooze reactions
+      placeholder: |
+        A timeout called by {name}. Bold strategy.
+  - type: textarea
+    id: greetings
+    attributes:
+      label: Greetings and "goal reached" lines
+      placeholder: |
+        Welcome back to the broadcast, {name}!
+        That's the daily goal! History has been made!
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: The lines are my own and family-friendly
+          required: true
+        - label: I'd like to open the PR myself (see CONTRIBUTING.md → Add a personality)
