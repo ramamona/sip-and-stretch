@@ -16,6 +16,7 @@ jobs:
     runs-on: macos-15
     env:
       HAS_SIGNING: ${{ secrets.DEVELOPER_ID_CERT_P12 != '' }}
+      HAS_TAP_TOKEN: ${{ secrets.TAP_TOKEN != '' }}
     steps:
       - uses: actions/checkout@v5
 
@@ -73,6 +74,21 @@ jobs:
           else
             gh release create "$TAG" dist/*.zip --generate-notes --notes "$NOTE" --title "Sip & Stretch $TAG"
           fi
+
+      # Needs a TAP_TOKEN secret: a token that can push to ramamona/homebrew-tap (see docs/RELEASING.md).
+      - name: Update Homebrew cask
+        if: env.HAS_TAP_TOKEN == 'true' && github.ref_type == 'tag'
+        env:
+          TAP_TOKEN: ${{ secrets.TAP_TOKEN }}
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          SHA="$(shasum -a 256 "dist/SipStretch-$VERSION.zip" | cut -d' ' -f1)"
+          git clone --depth 1 "https://x-access-token:${TAP_TOKEN}@github.com/ramamona/homebrew-tap.git" tap
+          cd tap
+          sed -i '' -E "s/^  version \".*\"/  version \"$VERSION\"/; s/^  sha256 \".*\"/  sha256 \"$SHA\"/" Casks/sip-and-stretch.rb
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "sip-and-stretch $VERSION" && git push || echo "Cask already up to date"
 
       - name: Clean up keychain
         if: always() && env.HAS_SIGNING == 'true'

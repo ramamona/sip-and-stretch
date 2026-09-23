@@ -85,6 +85,21 @@ Then release:
 3. The **Release** workflow tests, signs, notarizes and publishes the zip on the Releases page.
    Without the secrets (for example on a fork) it still publishes an ad-hoc build, labelled as such.
 
+## 5. Keep the Homebrew cask in sync (optional)
+
+The cask lives in [ramamona/homebrew-tap](https://github.com/ramamona/homebrew-tap). To have each release
+bump its version and checksum automatically, create a **fine-grained personal access token** at
+[github.com/settings/personal-access-tokens](https://github.com/settings/personal-access-tokens/new):
+repository access **Only select repositories → ramamona/homebrew-tap**, permission **Contents: Read and write**.
+Then:
+
+```bash
+gh secret set TAP_TOKEN -R ramamona/sip-and-stretch   # paste the token
+```
+
+Without it, update `version` and `sha256` in `Casks/sip-and-stretch.rb` by hand after each release
+(`shasum -a 256 dist/SipStretch-X.Y.Z.zip`).
+
 ## Troubleshooting
 
 - **`notarytool` says "Invalid"**: run `xcrun notarytool log <submission-id> --keychain-profile sipstretch`

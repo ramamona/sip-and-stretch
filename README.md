@@ -141,6 +141,14 @@ It's free, open source, 100% local, and small enough to read in an afternoon.
 
 ## 📦 Install
 
+**With Homebrew:**
+
+```bash
+brew install --cask ramamona/tap/sip-and-stretch
+```
+
+**Or by hand:**
+
 1. Download the latest `SipStretch-<version>.zip` from [**Releases**](https://github.com/ramamona/sip-and-stretch/releases).
 2. Unzip it and drag **SipStretch.app** into `/Applications`.
 3. Open it. Drip appears in your menu bar (there's no Dock icon, that's on purpose).
