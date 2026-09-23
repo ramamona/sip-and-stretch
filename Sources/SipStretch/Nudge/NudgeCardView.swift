@@ -68,7 +68,7 @@ struct NudgeCardView: View {
         .shadow(color: .black.opacity(0.25), radius: 14, y: 6)
         .padding(Self.shadowPadding)
         .offset(x: swipeOffset)
-        .opacity(1 - min(0.6, abs(swipeOffset) / 500))
+        .opacity(1 - min(0.6, Double(abs(swipeOffset)) / 500))
         .gesture(
             DragGesture(minimumDistance: 8)
                 .onChanged { dragX = $0.translation.width }
