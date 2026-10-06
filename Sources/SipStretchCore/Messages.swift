@@ -17,6 +17,9 @@ extension Personality {
         case .robot: return .robot
         case .grandma: return .grandma
         case .gymBro: return .gymBro
+        case .kratos: return .kratos
+        case .kungFuPanda: return .kungFuPanda
+        case .wukong: return .wukong
         }
     }
 }

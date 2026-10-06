@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **A 3D avatar that walks onto your screen** when a reminder is due: it crosses the bottom of the screen, waves, stands under the nudge card, cheers when you finish (and stretches along during guided stretches), then walks off. Built with SceneKit from a few dozen primitives, capped at 15/24/30 fps, paused while standing still, and freed after it leaves. Honors Reduce Motion and never takes clicks or focus. New **Avatar** tab in Settings.
+- Avatar characters: Drip, a customizable person (gender, skin tone, hair style and color, outfit and colors, accessories), Robo Buddy, and fan-made Kratos, Kung Fu Panda and Wukong.
+- Design an avatar from a photo: on-device face detection puts your face on the custom person and suggests skin tone and hair color. Nothing is uploaded.
+- Import your own 3D model (USDZ, DAE, SCN, OBJ) as the avatar.
+- Three new voices (Kratos, Kung Fu Panda, Monkey King) with their own reminders, cheers, snoozes, greetings and eye/walk lines. Characters talk in their own voice by default (switch off to keep your chosen personality), and read-aloud speech uses a matching pitch and pace.
+- Avatar options: size, walking speed, entry side, animation frame rate. All of it persists with your other settings.
 - Swipe a card toward the screen edge (trackpad or mouse drag) to dismiss it, like a notification banner.
 
 ## [1.0.0] - 2026-09-23

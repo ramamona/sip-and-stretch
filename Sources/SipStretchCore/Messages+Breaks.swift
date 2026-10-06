@@ -80,6 +80,9 @@ extension Personality {
             "You can't grind the screen 24/7, bro. Eyes need a deload. Look far!",
             "Twenty feet, twenty seconds, twenty percent more gains (in vibes). 💯",
         ]
+        case .kratos: CharacterLines.kratosEyes
+        case .kungFuPanda: CharacterLines.pandaEyes
+        case .wukong: CharacterLines.wukongEyes
         }
     }
 
@@ -149,6 +152,9 @@ extension Personality {
             "Bro, we don't skip leg day. Not even walk day. MOVE!",
             "Quick stroll, big gains. Well, medium gains. Still gains. 💯",
         ]
+        case .kratos: CharacterLines.kratosWalks
+        case .kungFuPanda: CharacterLines.pandaWalks
+        case .wukong: CharacterLines.wukongWalks
         }
     }
 }

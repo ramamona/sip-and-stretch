@@ -80,6 +80,14 @@ Not ready to code it? Pitch it with the **"New Drip personality"** issue templat
 
 All in [`Sources/SipStretchCore/Breaks.swift`](Sources/SipStretchCore/Breaks.swift): add to `Challenge.all` (unique id; either `reps` or a timed `seconds`, not both), `BreakPlanner.walkIdeas`, `BreakPlanner.eyeTips` or `BreakPlanner.postureItems`. Keep them doable at a desk in regular clothes.
 
+### 🚶 Add an avatar character
+
+1. Add a case to `AvatarCharacter` in [`Sources/SipStretchCore/Avatar.swift`](Sources/SipStretchCore/Avatar.swift) (`displayName`, `emoji`, `tagline`, and `voice` if it has its own personality).
+2. Add a `build…()` method to [`AvatarRig+Characters.swift`](Sources/SipStretch/Avatar/AvatarRig+Characters.swift) and call it from the `switch` in `AvatarRig.init`. Start from `assemble(_:…)` (a torso, head, two arms and two legs on pivots, so the walk cycle just works) and dress it up with `sphereNode`, `capsuleNode`, `boxNode`, `ringNode`…. Keep it to a few dozen primitives and flat colors: no textures, no big meshes.
+3. Give it a voice: add a `Personality` case with a full `MessagePack` plus eye and walk lines (see **Add a personality**; the tests check every category).
+4. Tuning knobs on the rig: `legSwing`, `armSwing`, `bounce`, `rightArmFactor` (hand holding a prop), `canWave`, and `height` (for lining the card up above its head).
+5. Anything based on an existing franchise must be an **original, simple homage**: no official models, textures, audio or verbatim quotes.
+
 ### 🃏 Add a new stretch format
 
 1. Add a case to `StretchFormat` and plan it in `BreakPlanner.plan` (both in `Breaks.swift`), plus a `BreakActivity` case if it needs new data.

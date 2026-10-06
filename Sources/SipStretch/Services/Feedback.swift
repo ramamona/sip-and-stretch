@@ -13,12 +13,16 @@ final class Feedback {
         nsSound.play()
     }
 
-    func speak(_ text: String) {
+    /// Reads `text` aloud, with the pitch and pace of whoever is talking (Kratos is gruff, the Monkey King squeaky).
+    func speak(_ text: String, as personality: Personality = .cheerful) {
         // Emoji get read out by name ("droplet"), which is funny exactly once.
         let spoken = String(String.UnicodeScalarView(text.unicodeScalars.filter { $0.isASCII || !$0.properties.isEmoji }))
             .trimmingCharacters(in: .whitespaces)
         guard !spoken.isEmpty else { return }
         synthesizer.stopSpeaking(at: .immediate)
-        synthesizer.speak(AVSpeechUtterance(string: spoken))
+        let utterance = AVSpeechUtterance(string: spoken)
+        utterance.pitchMultiplier = personality.speechPitch
+        utterance.rate = personality.speechRate
+        synthesizer.speak(utterance)
     }
 }

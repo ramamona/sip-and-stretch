@@ -64,7 +64,7 @@ It's free, open source, 100% local, and small enough to read in an afternoon.
 
 ### 💧 Meet Drip
 - A cute droplet mascot whose **mood follows your day**: happy, excited, sleepy (during Do Not Disturb), thirsty (when you're behind on water) and stretching.
-- **8 personalities** pick how Drip talks to you, and messages can use your nickname:
+- **11 personalities** pick how Drip talks to you, and messages can use your nickname:
 
   | | Personality | | Personality |
   |---|---|---|---|
@@ -72,8 +72,32 @@ It's free, open source, 100% local, and small enough to read in an afternoon.
   | 💅 | Sassy Bestie | 🤖 | Robo Buddy |
   | 🏴‍☠️ | Captain Hydro (pirate) | 👵 | Grandma |
   | 🪷 | Zen Master | 💪 | Gym Bro |
+  | 🪓 | Kratos | 🐼 | Kung Fu Panda |
+  | 🐵 | Monkey King | | |
 
 - **5 themes** (accent colors): Ocean, Sunset, Mint, Grape, Bubblegum.
+
+### 🚶 A 3D avatar that walks onto your screen
+- When a reminder is due, a **3D character walks across the bottom of your screen**, stops, waves, and the nudge card appears right above it. When you finish, it cheers (and stretches along with you during guided stretches), then walks off. It never blocks clicks and **frees all of its memory** once it has left.
+- **Pick who walks:**
+
+  | | Character | |
+  |---|---|---|
+  | 💧 | **Drip** | The classic droplet, now with legs |
+  | 🧑 | **Custom person** | Choose **gender** (male, female, non-binary), skin tone, hair style and color, outfit, outfit colors and accessories (glasses, sunglasses, cap, headphones, scarf) |
+  | 🤖 | **Robo Buddy** | Beep-boop in 3D |
+  | 🪓 | **Kratos** | A grim warrior with an icy axe |
+  | 🐼 | **Kung Fu Panda** | A chubby kung fu hero with a dumpling |
+  | 🐵 | **Wukong** | The Monkey King with his golden staff |
+  | 🧩 | **Your own 3D model** | Import a **USDZ, DAE, SCN or OBJ** file (up to 60 MB) |
+
+- **Design an avatar from a photo:** choose or drop a photo and the custom person gets **your face** (found with on-device face detection), plus a matching skin tone and hair color you can still tweak. Photos are analysed on your Mac and never uploaded; only a small round crop of the face is kept.
+- **Every character talks differently.** Kratos growls, the panda gets excited about dumplings, the Monkey King brags about his somersaults. Reminders, cheers, snoozes, greetings and read-aloud speech (with a matching pitch and pace) all use the character's own voice. Prefer your usual personality? Turn off **Talk like the character**.
+- **Tweak the walk:** size (small, medium, large), speed (slow, normal, fast), which side it walks in from, and the frame rate.
+- **Light on resources:** the avatar only exists while a reminder is active; it's built from a few dozen shapes (no big model files); animation is capped at 15, 24 or 30 fps; and SceneKit is **paused entirely** while the avatar stands still. With *Reduce Motion* on, it fades in instead of walking.
+
+> [!NOTE]
+> Kratos, Kung Fu Panda and Wukong are **fan-made homages** drawn from simple shapes and flat colors, with original lines written in their spirit. No official art, models, music or voice recordings are included, and the project isn't affiliated with or endorsed by the games and films they nod to.
 
 ### 🧭 Menu bar popover
 - Drip with a greeting in your chosen personality, your **level and XP bar**.
@@ -136,7 +160,7 @@ It's free, open source, 100% local, and small enough to read in an afternoon.
 - **Launch at login** (via `SMAppService`).
 - **Accessibility:** honors *Reduce Motion* (Drip and the bottle hold still, cards fade instead of sliding, no confetti), VoiceOver announces new cards, and custom controls have proper labels.
 - **URL scheme automation** for Shortcuts and scripts (see [Automation](#-automation-with-the-url-scheme)).
-- **Private by design:** no network, no analytics, no account.
+- **Private by design:** no network, no analytics, no account. Avatar photos are processed on-device.
 - **Light on resources:** about 0% CPU and ~17 MB of memory while idle. It ticks every 30 s with timer coalescing, animations run only while you're looking at them, and the Settings window is freed when you close it.
 
 ## 📦 Install
@@ -298,8 +322,16 @@ Everything lives in **Settings** (from the popover, or `sipstretch://settings`).
 | Away threshold (idle) | **5 min** | 1 – 60 min without keyboard or mouse |
 | Delivery | **Nudge card** | Nudge card / System notification / Card + notification |
 | Card position | **Top right** | any of the four corners, or Center stage |
-| Personality | **Cheerful Coach** 🤗 | 8 personalities |
+| Personality | **Cheerful Coach** 🤗 | 11 personalities |
 | Nickname | *(empty, Drip says "friend")* | anything |
+| Walking avatar | **On** | On / Off (off = classic card in the corner) |
+| Avatar character | **Drip** 💧 | Drip, custom person, Robo Buddy, Kratos, Kung Fu Panda, Wukong, or your own 3D model |
+| Talk like the character | On | On / Off (off = use the personality above) |
+| Custom person | Non-binary, short hair, T-shirt | Gender, skin tone, hair style + color, outfit + colors, accessories, or a face from a photo |
+| Avatar size | **Medium** | Small / Medium / Large |
+| Walking speed | **Normal** | Slow / Normal / Fast |
+| Walks in from | **Across the screen** | Across the screen / left / right |
+| Avatar animation | **Balanced** (24 fps) | Battery saver (15 fps) / Balanced / Smooth (30 fps) |
 | Theme | **Ocean** | Ocean, Sunset, Mint, Grape, Bubblegum |
 | Menu bar display | **Countdown** | Icon only / Countdown / Water progress |
 | Launch at login | Off | On / Off |
@@ -319,9 +351,11 @@ sip-and-stretch/
 │   │   ├── ReminderClock.swift       # the scheduler: when is each reminder due? (pure tick function)
 │   │   ├── Stats.swift               # glasses, stretches, XP, levels, streaks, history
 │   │   ├── Achievements.swift        # the 11 achievements and their unlock rules
-│   │   ├── Personality.swift         # the 8 personalities + MessagePack type
+│   │   ├── Personality.swift         # the 11 personalities + MessagePack type
 │   │   ├── Messages.swift            # every line each personality can say
 │   │   ├── Messages+Breaks.swift     # eye-break and walk lines
+│   │   ├── Messages+Characters.swift # Kratos, Kung Fu Panda and Monkey King lines
+│   │   ├── Avatar.swift              # avatar characters, custom-person options, walk settings, palette
 │   │   ├── Breaks.swift              # stretch formats, challenges, walk ideas, BreakPlanner
 │   │   ├── Stretches.swift           # Stretch, BodyArea, and the picker
 │   │   ├── StretchLibrary+Data.swift # the stretch catalogue
@@ -330,6 +364,7 @@ sip-and-stretch/
 │       ├── App/                      # entry point, AppModel (source of truth), app delegate (URL events), persistence
 │       ├── Services/                 # notifications, sound/speech, presence, meeting detector, login item
 │       ├── Nudge/                    # floating cards, their queue, and the break activities (roulette, breathing…)
+│       ├── Avatar/                   # the 3D avatar: SceneKit rig, walker window, photo → face, model import
 │       ├── Views/                    # menu bar label and popover
 │       │   ├── Components/           # Drip mascot, water bottle, rings, confetti, button styles, @ViewState
 │       │   └── Settings/             # the Settings window and its panes
@@ -390,6 +425,12 @@ These are **ideas, not promises**. Pick one up if it sparks joy.
 **Why a menu bar app?**
 Reminders should stay out of the way until they're needed. There's no Dock icon and no window to manage. Drip sits in the menu bar and comes out when it's time.
 
+**Can I use my own character?**
+Yes, two ways. In **Settings → Avatar**, upload a photo to give the custom person your face, or import a 3D model (USDZ works best, DAE/SCN/OBJ also load) of any character you made or have the rights to. It walks with a waddle, and you pick its voice (Kratos, Kung Fu Panda and Monkey King voices work with any avatar).
+
+**Does the avatar eat my battery?**
+No: it only exists while a reminder is active, animates at 15–30 fps (your choice), and pauses rendering completely while it stands still. Pick **Battery saver** to cap it at 15 fps, or turn off *Walk across the screen* in Settings → Avatar to go back to the classic corner card.
+
 **Does it work with macOS Focus?**
 Not directly. Sip & Stretch has its own Do Not Disturb. To link the two, create a Shortcuts automation for your Focus that opens `sipstretch://dnd/on` when it turns on and `sipstretch://dnd/off` when it turns off (if your macOS version offers Focus automations).
 
@@ -429,7 +470,7 @@ Sip & Stretch is free and always will be. If Drip saved your neck (literally), y
 
 ## 💙 Credits
 
-Drip, the personalities, and the questionable jokes were built by the Sip & Stretch contributors.
+Drip, the personalities, the avatars, and the questionable jokes were built by the Sip & Stretch contributors. Kratos, Kung Fu Panda and Wukong are unofficial fan homages; all rights to those characters belong to their respective owners.
 
 <div align="center">
 

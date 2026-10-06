@@ -75,6 +75,10 @@ struct NudgeCardView: View {
                 .onEnded { endSwipe(distance: $0.translation.width, predicted: $0.predictedEndTranslation.width) }
         )
         .onChange(of: swipe.releases) { endSwipe(distance: swipe.offset, predicted: swipe.offset * 2) }
+        // The walking avatar stretches along during guided stretches.
+        .onChange(of: phase) {
+            if case .guide = phase { model.nudges.walker.setStretching(true) } else { model.nudges.walker.setStretching(false) }
+        }
         .animation(.spring(response: 0.4, dampingFraction: 0.8), value: phase)
         .task(id: phase) {
             lively = true
@@ -138,7 +142,7 @@ struct NudgeCardView: View {
     private func ask(kind: ReminderKind, activity: BreakActivity) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .top, spacing: 14) {
-                DripView(mood: askMood(kind), theme: theme, size: 66, animated: lively)
+                MascotView(mood: askMood(kind), size: 66, animated: lively)
                 VStack(alignment: .leading, spacing: 5) {
                     HStack(spacing: 6) {
                         Text(nudge.title).font(.rounded(21, .bold))
@@ -220,7 +224,7 @@ struct NudgeCardView: View {
 
     private func celebrate(message: String, xp: Int) -> some View {
         HStack(spacing: 16) {
-            DripView(mood: .excited, theme: theme, size: 74, animated: lively)
+            MascotView(mood: .excited, size: 74, animated: lively)
             VStack(alignment: .leading, spacing: 6) {
                 Text(nudge.isPreview ? "Nice!" : "+\(xp) XP")
                     .font(.rounded(26, .heavy))
@@ -242,7 +246,7 @@ struct NudgeCardView: View {
 
     private func snoozed(message: String) -> some View {
         HStack(spacing: 16) {
-            DripView(mood: .sleepy, theme: theme, size: 70, animated: lively)
+            MascotView(mood: .sleepy, size: 70, animated: lively)
             VStack(alignment: .leading, spacing: 6) {
                 Text("Snoozed 😴").font(.rounded(22, .bold))
                 Text(message)
@@ -288,7 +292,7 @@ struct NudgeCardView: View {
 
     private func levelUpView(_ level: Level) -> some View {
         HStack(spacing: 16) {
-            DripView(mood: .excited, theme: theme, size: 76, animated: lively)
+            MascotView(mood: .excited, size: 76, animated: lively)
             VStack(alignment: .leading, spacing: 4) {
                 Text("LEVEL UP!")
                     .font(.rounded(12, .heavy))
@@ -312,7 +316,7 @@ struct NudgeCardView: View {
     private var welcome: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .top, spacing: 14) {
-                DripView(mood: .happy, theme: theme, size: 70, animated: lively)
+                MascotView(mood: .happy, size: 70, animated: lively)
                 VStack(alignment: .leading, spacing: 5) {
                     Text(nudge.title).font(.rounded(21, .bold))
                     Text(nudge.message)
@@ -431,6 +435,7 @@ struct NudgeCardView: View {
 
     private func startCelebration(message: String, xp: Int) {
         confettiStart = .now
+        model.nudges.walker.cheer()
         phase = .celebrate(message, xp: xp)
     }
 

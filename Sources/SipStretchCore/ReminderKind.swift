@@ -64,3 +64,28 @@ public enum ReminderKind: String, Codable, CaseIterable, Identifiable, Sendable 
         }
     }
 }
+
+extension ReminderKind {
+    /// Headlines in a character's own voice; everyone else uses the standard `cardTitles`.
+    /// Keep them to about 20 characters so they fit on one line of a card.
+    public func cardTitles(for personality: Personality) -> [String] {
+        switch (personality, self) {
+        case (.kratos, .water): ["Drink.", "Hydrate.", "Water. Now.", "Thirst is a foe."]
+        case (.kratos, .stretch): ["Rise.", "Stand and stretch.", "Unbend.", "Move."]
+        case (.kratos, .eyes): ["Look away.", "Eyes to the horizon.", "Far. Twenty seconds."]
+        case (.kratos, .walk): ["March.", "Stand. Walk.", "Leave the chair."]
+
+        case (.kungFuPanda, .water): ["Water time!", "Sip, sip, hooray!", "Hydration, awesome!", "Water first!"]
+        case (.kungFuPanda, .stretch): ["Champion stretch!", "Wiggle time!", "Kung fu warm-up!", "Noodle bends!"]
+        case (.kungFuPanda, .eyes): ["Look far, warrior!", "Eye break!", "Eagle eyes time!"]
+        case (.kungFuPanda, .walk): ["Adventure time!", "Let's stroll!", "Walk it off!"]
+
+        case (.wukong, .water): ["Quench thy thirst!", "A sip, friend!", "Cloud refreshment!", "Drink, hero!"]
+        case (.wukong, .stretch): ["Stretch, nimble one!", "Monkey moves!", "Leap and bend!"]
+        case (.wukong, .eyes): ["Golden eyes up!", "Gaze far away!", "Eyes up, friend!"]
+        case (.wukong, .walk): ["Wander, friend!", "Cloud-walk time!", "Journey west!"]
+
+        default: cardTitles
+        }
+    }
+}

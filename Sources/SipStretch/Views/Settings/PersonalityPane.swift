@@ -21,6 +21,12 @@ struct PersonalityPane: View {
                 sampleBubble
             } header: {
                 Text("Personality")
+            } footer: {
+                if model.settings.effectivePersonality != model.settings.personality {
+                    Text("Your avatar (\(model.settings.avatar.character.displayName)) is currently talking in its own voice (\(model.settings.effectivePersonality.displayName)). Change that in the Avatar tab.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
             }
 
             Section("Theme") {

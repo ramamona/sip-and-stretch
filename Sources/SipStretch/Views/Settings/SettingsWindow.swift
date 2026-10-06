@@ -3,7 +3,7 @@ import Observation
 import SwiftUI
 
 enum SettingsPane: String, CaseIterable, Identifiable {
-    case general, reminders, schedule, doNotDisturb, personality, trophies, about
+    case general, reminders, schedule, doNotDisturb, personality, avatar, trophies, about
 
     var id: String { rawValue }
 
@@ -14,6 +14,7 @@ enum SettingsPane: String, CaseIterable, Identifiable {
         case .schedule: "Active Hours"
         case .doNotDisturb: "Do Not Disturb"
         case .personality: "Personality & Look"
+        case .avatar: "Avatar"
         case .trophies: "Trophies & Stats"
         case .about: "About"
         }
@@ -26,6 +27,7 @@ enum SettingsPane: String, CaseIterable, Identifiable {
         case .schedule: "clock.fill"
         case .doNotDisturb: "moon.zzz.fill"
         case .personality: "theatermasks.fill"
+        case .avatar: "figure.walk"
         case .trophies: "trophy.fill"
         case .about: "info.circle.fill"
         }
@@ -97,6 +99,7 @@ struct SettingsView: View {
                 case .schedule: SchedulePane()
                 case .doNotDisturb: DNDPane()
                 case .personality: PersonalityPane()
+                case .avatar: AvatarPane()
                 case .trophies: TrophiesPane()
                 case .about: AboutPane()
                 }

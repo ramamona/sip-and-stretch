@@ -7,10 +7,17 @@ import SipStretchCore
 final class NudgeController {
     weak var model: AppModel?
 
+    /// The 3D avatar that walks in ahead of reminder cards (see `AvatarWalker`).
+    let walker = AvatarWalker()
+
     private var panel: NudgePanel?
     private var queue: [Nudge] = []
     private(set) var current: Nudge?
     private var closingID: UUID?
+    /// Set while the avatar is still walking toward its spot; the card for this nudge isn't on screen yet.
+    private var walkingID: UUID?
+    /// How the current card slid in, so it can slide back out the same way.
+    private var slide = CGSize.zero
 
     func present(_ nudge: Nudge) {
         // One card per reminder kind: a second water reminder while one is waiting adds nothing.
@@ -31,9 +38,18 @@ final class NudgeController {
     }
 
     func close(_ nudge: Nudge) {
-        guard current?.id == nudge.id, closingID != nudge.id, let panel else { return }
+        guard current?.id == nudge.id, closingID != nudge.id else { return }
+        if walkingID == nudge.id {
+            // Dismissed or stashed while the avatar was still walking in: no card is up yet, so stop the walk.
+            walkingID = nil
+            walker.tearDown()
+            current = nil
+            showNextIfIdle()
+            return
+        }
+        guard let panel else { return }
         closingID = nudge.id // cards can close themselves and be clicked at the same moment
-        let slide = slideOffset
+        let slide = self.slide
         NSAnimationContext.runAnimationGroup({ context in
             context.duration = reduceMotion ? 0.15 : 0.22
             context.timingFunction = CAMediaTimingFunction(name: .easeIn)
@@ -60,13 +76,47 @@ final class NudgeController {
 
     /// Shows the next queued card. Reminder cards wait in the queue while it's quiet (Do Not Disturb
     /// or a call); celebrations and previews (things the user just did) still show.
+    ///
+    /// With the walking avatar on, a reminder first sends the avatar across the screen and the card
+    /// appears above it once it arrives. When nothing is left to show, the avatar walks off.
     func showNextIfIdle() {
         guard current == nil, let model else { return }
         let held = { (nudge: Nudge) in model.isQuiet && nudge.content.reminderKind != nil && !nudge.isPreview }
-        guard let index = queue.firstIndex(where: { !held($0) }) else { return }
+        guard let index = queue.firstIndex(where: { !held($0) }) else {
+            walker.leave()
+            return
+        }
         let nudge = queue.remove(at: index)
         current = nudge
 
+        guard usesWalker(nudge), let screen = activeScreen() else {
+            walker.leave()
+            display(nudge, standing: nil, on: nil)
+            return
+        }
+        walkingID = nudge.id
+        walker.walkIn(
+            settings: model.settings.avatar,
+            theme: model.settings.theme,
+            screen: screen,
+            standCenterX: standingX(on: screen, position: model.settings.cardPosition)
+        ) { [weak self] stand in
+            guard let self, self.walkingID == nudge.id, self.current?.id == nudge.id else { return }
+            self.walkingID = nil
+            self.display(nudge, standing: stand, on: screen)
+        }
+    }
+
+    private func usesWalker(_ nudge: Nudge) -> Bool {
+        guard let model, nudge.content.reminderKind != nil else { return false }
+        let settings = model.settings
+        // Notification-only delivery has no card for the avatar to stand under (previews always do).
+        return settings.avatar.walkOnScreen && (nudge.isPreview || settings.delivery != .notification)
+    }
+
+    /// Puts the card in the panel and slides it in: at the chosen corner, or above the avatar when it's standing.
+    private func display(_ nudge: Nudge, standing stand: WalkerStand?, on screen: NSScreen?) {
+        guard let model else { return }
         let swipe = CardSwipe()
         let card = NudgeCardView(nudge: nudge, swipe: swipe) { [weak self] in self?.close(nudge) }
             .environment(model)
@@ -79,9 +129,16 @@ final class NudgeController {
         self.panel = panel
         panel.contentView = hosting
 
-        let target = targetFrame(size: size, position: model.settings.cardPosition)
-        let slide = slideOffset
-        panel.setFrame(target.offsetBy(dx: slide.width, dy: slide.height), display: false)
+        let target: NSRect
+        if let stand, let screen {
+            target = anchoredFrame(size: size, stand: stand, visible: screen.visibleFrame)
+            slide = reduceMotion ? .zero : CGSize(width: 0, height: -30)
+        } else {
+            target = targetFrame(size: size, position: model.settings.cardPosition)
+            slide = slideOffset
+        }
+        let offset = slide
+        panel.setFrame(target.offsetBy(dx: offset.width, dy: offset.height), display: false)
         panel.alphaValue = 0
         panel.orderFrontRegardless() // visible without activating the app or taking focus
 
@@ -114,10 +171,14 @@ final class NudgeController {
         }
     }
 
-    private func targetFrame(size: CGSize, position: CardPosition) -> NSRect {
+    /// The screen the mouse is on, where the user is probably working.
+    private func activeScreen() -> NSScreen? {
         let mouse = NSEvent.mouseLocation
-        let screen = NSScreen.screens.first { NSMouseInRect(mouse, $0.frame, false) } ?? NSScreen.main ?? NSScreen.screens.first
-        let visible = screen?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
+        return NSScreen.screens.first { NSMouseInRect(mouse, $0.frame, false) } ?? NSScreen.main ?? NSScreen.screens.first
+    }
+
+    private func targetFrame(size: CGSize, position: CardPosition) -> NSRect {
+        let visible = activeScreen()?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
         let inset: CGFloat = 4 // the panel already has shadow padding built in
         let origin: CGPoint = switch position {
         case .topRight: CGPoint(x: visible.maxX - size.width - inset, y: visible.maxY - size.height - inset)
@@ -127,6 +188,26 @@ final class NudgeController {
         case .center: CGPoint(x: visible.midX - size.width / 2, y: visible.midY - size.height / 2 + visible.height * 0.12)
         }
         return NSRect(origin: origin, size: size)
+    }
+
+    /// Where the avatar should stop: under the spot the card would normally occupy (left, right or middle).
+    private func standingX(on screen: NSScreen, position: CardPosition) -> CGFloat {
+        let visible = screen.visibleFrame
+        let half = NudgeCardView.panelSize.width / 2
+        return switch position {
+        case .topRight, .bottomRight: visible.maxX - half - 4
+        case .topLeft, .bottomLeft: visible.minX + half + 4
+        case .center: visible.midX
+        }
+    }
+
+    /// A card just above the standing avatar's head, kept on screen.
+    private func anchoredFrame(size: CGSize, stand: WalkerStand, visible: NSRect) -> NSRect {
+        let inset: CGFloat = 4
+        let x = min(max(stand.frame.midX - size.width / 2, visible.minX + inset), visible.maxX - size.width - inset)
+        // The panel carries shadow padding, so overlap it a little to sit just above the head.
+        let y = min(stand.headTop - NudgeCardView.shadowPadding + 6, visible.maxY - size.height - inset)
+        return NSRect(x: x, y: y, width: size.width, height: size.height)
     }
 }
 

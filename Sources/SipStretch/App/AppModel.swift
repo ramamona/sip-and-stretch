@@ -137,7 +137,7 @@ final class AppModel {
     private func deliver(_ kind: ReminderKind) {
         let nudge = reminderNudge(kind)
         feedback.play(settings[kind].sound)
-        if settings.speakReminders { feedback.speak("\(nudge.title) \(nudge.message)") }
+        if settings.speakReminders { feedback.speak("\(nudge.title) \(nudge.message)", as: settings.effectivePersonality) }
         switch settings.delivery {
         case .card:
             nudges.present(nudge)
@@ -161,7 +161,7 @@ final class AppModel {
     var notificationsAllowed: Bool { notificationStatus == .allowed }
 
     func reminderNudge(_ kind: ReminderKind, preview: Bool = false) -> Nudge {
-        let personality = settings.personality
+        let personality = settings.effectivePersonality
         let lines = switch kind {
         case .water: personality.pack.waterReminders
         case .stretch: personality.pack.stretchReminders
@@ -175,7 +175,7 @@ final class AppModel {
         default: []
         }
         if !preview, !stretches.isEmpty { recentStretchIDs = Array((stretches.map(\.id) + recentStretchIDs).prefix(12)) }
-        let title = kind.cardTitles.pick(avoiding: lastLines["title-\(kind)"])
+        let title = kind.cardTitles(for: personality).pick(avoiding: lastLines["title-\(kind)"])
         lastLines["title-\(kind)"] = title
         return Nudge(content: .reminder(kind, activity), title: title, message: message, isPreview: preview)
     }
@@ -198,12 +198,17 @@ final class AppModel {
     }
 
     func refreshGreeting() {
-        greeting = line(settings.personality.pack.greetings, key: "greeting")
+        greeting = line(settings.effectivePersonality.pack.greetings, key: "greeting")
     }
 
     func preview(_ kind: ReminderKind) {
         feedback.play(settings[kind].sound)
         nudges.present(reminderNudge(kind, preview: true))
+    }
+
+    /// Settings → Avatar: send the avatar on a walk with a sample water reminder.
+    func previewWalk() {
+        preview(.water)
     }
 
     // MARK: Actions
@@ -219,7 +224,7 @@ final class AppModel {
         clock.restart(.water, now: Date(), settings: settings) // just drank: count from now
         notifications.removeDelivered(.water)
         statsChanged(levelBefore: levelBefore)
-        let pack = settings.personality.pack
+        let pack = settings.effectivePersonality.pack
         let cheer = wasBelowGoal && waterLeft == 0 ? line(pack.goalReached, key: "goal") : line(pack.waterCheers, key: "water-cheer")
         greeting = cheer
         return cheer
@@ -239,7 +244,7 @@ final class AppModel {
         clock.restart(kind, now: Date(), settings: settings)
         notifications.removeDelivered(kind)
         statsChanged(levelBefore: levelBefore)
-        let cheers = kind == .eyes ? Personality.eyeCheers : settings.personality.pack.stretchCheers
+        let cheers = kind == .eyes ? Personality.eyeCheers : settings.effectivePersonality.pack.stretchCheers
         let cheer = line(cheers, key: "\(kind)-cheer")
         greeting = cheer
         return cheer
@@ -251,7 +256,7 @@ final class AppModel {
         clock.snooze(kind, now: Date(), settings: settings)
         notifications.removeDelivered(kind)
         statsChanged(levelBefore: nil)
-        return line(settings.personality.pack.snoozes, key: "snooze")
+        return line(settings.effectivePersonality.pack.snoozes, key: "snooze")
     }
 
     /// Dismissed a reminder without doing it. The countdown already restarted when it fired.
@@ -328,7 +333,7 @@ final class AppModel {
             let changed = settings[kind].enabled != old[kind].enabled || settings[kind].intervalMinutes != old[kind].intervalMinutes
             if changed || scheduleChanged { clock.restart(kind, now: now, settings: settings) }
         }
-        if settings.personality != old.personality || settings.nickname != old.nickname { refreshGreeting() }
+        if settings.effectivePersonality != old.effectivePersonality || settings.nickname != old.nickname { refreshGreeting() }
         if settings.dailyWaterGoal != old.dailyWaterGoal || scheduleChanged {
             // A new goal or new rest days can complete streaks (and achievements) retroactively.
             stats.refreshBestStreak(goal: settings.dailyWaterGoal, schedule: settings.schedule, today: now)

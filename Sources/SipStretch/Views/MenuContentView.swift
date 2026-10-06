@@ -32,7 +32,7 @@ struct MenuContentView: View {
 
     private var header: some View {
         HStack(spacing: 12) {
-            DripView(mood: model.mood, theme: theme, size: 50, animated: live)
+            MascotView(mood: model.mood, size: 50, animated: live)
             VStack(alignment: .leading, spacing: 5) {
                 Text(model.greeting)
                     .font(.rounded(14, .semibold))

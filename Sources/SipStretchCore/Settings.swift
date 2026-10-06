@@ -125,6 +125,9 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var theme: Theme = .ocean
     public var nickname = ""
 
+    /// The walking 3D avatar: character, custom look, photo, model and walk style.
+    public var avatar = AvatarSettings()
+
     public init() {}
 
     public subscript(kind: ReminderKind) -> ReminderSettings {

@@ -4,6 +4,8 @@ import Foundation
 /// (see `Messages.swift`). Adding a new one = add a case here + a pack there.
 public enum Personality: String, Codable, CaseIterable, Identifiable, Sendable {
     case cheerful, sassy, pirate, zen, dramatic, robot, grandma, gymBro
+    // Character voices: original lines written in the spirit of each character (no quotes from the source material).
+    case kratos, kungFuPanda, wukong
 
     public var id: String { rawValue }
 
@@ -17,6 +19,9 @@ public enum Personality: String, Codable, CaseIterable, Identifiable, Sendable {
         case .robot: "Robo Buddy"
         case .grandma: "Grandma"
         case .gymBro: "Gym Bro"
+        case .kratos: "Kratos"
+        case .kungFuPanda: "Kung Fu Panda"
+        case .wukong: "Monkey King"
         }
     }
 
@@ -30,6 +35,9 @@ public enum Personality: String, Codable, CaseIterable, Identifiable, Sendable {
         case .robot: "🤖"
         case .grandma: "👵"
         case .gymBro: "💪"
+        case .kratos: "🪓"
+        case .kungFuPanda: "🐼"
+        case .wukong: "🐵"
         }
     }
 
@@ -43,6 +51,29 @@ public enum Personality: String, Codable, CaseIterable, Identifiable, Sendable {
         case .robot: "BEEP. HYDRATION PROTOCOL ENGAGED."
         case .grandma: "Worries about you. Brought snacks."
         case .gymBro: "Hydrate or diedrate, bro."
+        case .kratos: "Few words. Gruff. Hydration is a duty."
+        case .kungFuPanda: "Dumplings, destiny and a lot of enthusiasm."
+        case .wukong: "Mischievous, mighty, bored of heaven's rules."
+        }
+    }
+
+    /// Pitch for read-aloud reminders (`AVSpeechUtterance.pitchMultiplier`, 0.5 to 2).
+    public var speechPitch: Float {
+        switch self {
+        case .kratos: 0.55
+        case .kungFuPanda: 1.1
+        case .wukong: 1.3
+        default: 1
+        }
+    }
+
+    /// Speaking rate for read-aloud reminders (`AVSpeechUtterance.rate`; 0.5 is the system default).
+    public var speechRate: Float {
+        switch self {
+        case .kratos: 0.42
+        case .kungFuPanda: 0.52
+        case .wukong: 0.55
+        default: 0.5
         }
     }
 }
