@@ -481,16 +481,25 @@ extension AvatarRig {
     }
 
     /// Fits the model to the stage (about 1.5 m tall, feet on the ground, centered) and gives it a waddle.
-    func buildModel(url: URL, rotationDegrees: Int) -> Bool {
+    /// Its attitude (lunges, spin kicks, somersaults) follows `voice`; see `AvatarRig+Moves.swift`.
+    func buildModel(url: URL, rotationDegrees: Int, voice: Personality) -> Bool {
         guard let container = Self.loadModelNode(url: url) else { return false }
         let (low, high) = container.boundingBox
         let modelHeight = high.y - low.y
         let modelWidth = max(high.x - low.x, high.z - low.z)
         guard modelHeight > 0.0001 else { return false }
 
-        let targetHeight: CGFloat = 1.5
+        // Fit by height, so a model standing in a T-pose isn't shrunk to fit its outstretched arms.
+        // Big characters stand a little taller than small ones.
+        let sizeFactor: CGFloat = switch voice {
+        case .hulk: 1.2
+        case .kratos: 1.15
+        case .kungFuPanda: 0.95
+        default: 1
+        }
+        let targetHeight: CGFloat = 1.5 * sizeFactor
         var scale = targetHeight / modelHeight
-        if modelWidth * scale > 1.6 { scale = 1.6 / modelWidth }
+        if modelWidth * scale > 2.2 { scale = 2.2 / modelWidth }
         container.scale = vec(scale, scale, scale)
         container.position = vec(-(low.x + high.x) / 2 * scale, -low.y * scale, -(low.z + high.z) / 2 * scale)
 

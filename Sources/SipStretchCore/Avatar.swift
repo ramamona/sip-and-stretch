@@ -245,6 +245,22 @@ public enum AvatarPalette {
     }
 }
 
+/// A 3D model file the user imported for one character. The file itself lives in Application Support.
+public struct ModelSlot: Codable, Equatable, Sendable {
+    public var character: AvatarCharacter
+    public var fileName: String
+    public var displayName: String
+    /// 0, 90, 180 or 270: turn a model that faces the wrong way.
+    public var rotation: Int
+
+    public init(character: AvatarCharacter, fileName: String, displayName: String, rotation: Int = 0) {
+        self.character = character
+        self.fileName = fileName
+        self.displayName = displayName
+        self.rotation = rotation
+    }
+}
+
 /// Everything about the walking avatar. Persisted inside `AppSettings`.
 ///
 /// Note: keep every property non-optional with a default. `AppSettings.decode` merges stored JSON
@@ -273,11 +289,10 @@ public struct AvatarSettings: Codable, Equatable, Sendable {
     /// Bumped whenever the photo changes, so views know to reload it.
     public var photoRevision = 0
 
-    // Imported 3D model
-    public var modelFileName = ""
-    public var modelDisplayName = ""
-    /// 0, 90, 180 or 270: turn a model that faces the wrong way.
-    public var modelRotation = 0
+    /// Imported 3D models. Any character can have its own (a detailed Kratos for Kratos, say); the
+    /// `.model` character is the one for models that don't replace a built-in character.
+    /// An array rather than a dictionary: `AppSettings.decode` only keeps keys it already knows.
+    public var modelSlots: [ModelSlot] = []
 
     // Walking
     public var size: AvatarSize = .medium
@@ -291,8 +306,28 @@ public struct AvatarSettings: Codable, Equatable, Sendable {
     /// The face photo should be shown (a photo exists, the user wants it, and the avatar is the custom person).
     public var showsPhotoFace: Bool { character == .human && hasPhoto && usePhotoFace }
 
-    /// A model is imported and selected.
-    public var hasModel: Bool { !modelFileName.isEmpty }
+    /// The imported model for `character`, if there is one.
+    public func modelSlot(for character: AvatarCharacter) -> ModelSlot? {
+        modelSlots.first { $0.character == character }
+    }
+
+    /// The imported model that replaces the built-in look of the selected character, if any.
+    public var activeModel: ModelSlot? { modelSlot(for: character) }
+
+    /// Adds, replaces or (with nil) removes the model for `character`.
+    public mutating func setModel(_ slot: ModelSlot?, for character: AvatarCharacter) {
+        modelSlots.removeAll { $0.character == character }
+        if var slot {
+            slot.character = character
+            modelSlots.append(slot)
+        }
+    }
+
+    /// Turns a model that faces the wrong way (0, 90, 180 or 270 degrees).
+    public mutating func setModelRotation(_ degrees: Int, for character: AvatarCharacter) {
+        guard let index = modelSlots.firstIndex(where: { $0.character == character }) else { return }
+        modelSlots[index].rotation = ((degrees % 360) + 360) % 360
+    }
 }
 
 extension AppSettings {

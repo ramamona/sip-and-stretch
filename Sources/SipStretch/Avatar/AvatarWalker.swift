@@ -52,7 +52,7 @@ final class AvatarWalker {
 
     /// Walks in from the right edge of `screen` (the main display) to its bottom-right corner, then does its
     /// signature move. `arrived` is called once it stands there, or right away if it's already standing.
-    func walkIn(settings: AvatarSettings, theme: Theme, screen: NSScreen, arrived: @escaping (WalkerStand) -> Void) {
+    func walkIn(app: AppSettings, screen: NSScreen, arrived: @escaping (WalkerStand) -> Void) {
         if phase == .standing, let standingPanel = panel {
             outcome = .pleased
             stretching = false
@@ -63,11 +63,12 @@ final class AvatarWalker {
         tearDown()
         generation += 1
         let token = generation
+        let settings = app.avatar
         self.settings = settings
         self.screen = screen
         outcome = .pleased
 
-        let look = AvatarLook(settings: settings, theme: theme)
+        let look = AvatarLook(app: app)
         let newRig = AvatarStage.makeRig(look: look)
         let side = (Self.baseWindowSide * CGFloat(settings.size.scale)).rounded()
         pointsPerMeter = side / AvatarStage.visibleHeight

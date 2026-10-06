@@ -139,6 +139,7 @@ extension AvatarRig {
     // MARK: Signature moves
 
     private func signature() -> TimeInterval {
+        if isModel { return modelSignature() }
         switch character {
         case .kratos:
             // Axe over the head and down, blades of chaos lashing, then a whirl of both.
@@ -179,11 +180,19 @@ extension AvatarRig {
             return hulkSmash(times: 1, thenJump: true)
         case .robot:
             // Robot dance: arms pump in turn, head scanning.
-            let pump = [turn(-1.2, 0, 0.3, 0.2), turn(0, 0, armSplay, 0.2)]
-            let pumpLeft = [turn(-1.2, 0, -0.3, 0.2), turn(0, 0, -armSplay, 0.2)]
+            let pump: [SCNAction] = [turn(-1.2, 0, 0.3, 0.2), turn(0, 0, armSplay, 0.2)]
+            let pumpLeft: [SCNAction] = [turn(-1.2, 0, -0.3, 0.2), turn(0, 0, -armSplay, 0.2)]
+            var rightTrack: [SCNAction] = []
+            var leftTrack: [SCNAction] = [wait(0.2)]
+            for _ in 0..<3 {
+                rightTrack += pump
+                leftTrack += pumpLeft
+            }
+            rightTrack.append(restRight())
+            leftTrack.append(restLeft())
             play([
-                (rightArm, pump + pump + pump + [restRight()]),
-                (leftArm, [wait(0.2)] + pumpLeft + pumpLeft + pumpLeft + [restLeft()]),
+                (rightArm, rightTrack),
+                (leftArm, leftTrack),
                 (head, [turn(0, 0.6, 0, 0.3), turn(0, -0.6, 0, 0.5), turn(0, 0, 0, 0.3)]),
             ])
             return 1.7
@@ -238,6 +247,7 @@ extension AvatarRig {
     // MARK: Pleased
 
     private func pleased() -> TimeInterval {
+        if isModel { return modelPleased() }
         let front = (yawNode, [turn(0, 0, 0, 0.25)])
         switch character {
         case .kratos:
@@ -259,11 +269,19 @@ extension AvatarRig {
             return 1.4
         case .hulk:
             // Chest beating, then a big happy bound.
-            let beatRight = [turn(-0.9, 0, 0.45, 0.12), turn(-0.2, 0, 0.45, 0.12)]
-            let beatLeft = [turn(-0.9, 0, -0.45, 0.12), turn(-0.2, 0, -0.45, 0.12)]
+            let beatRight: [SCNAction] = [turn(-0.9, 0, 0.45, 0.12), turn(-0.2, 0, 0.45, 0.12)]
+            let beatLeft: [SCNAction] = [turn(-0.9, 0, -0.45, 0.12), turn(-0.2, 0, -0.45, 0.12)]
+            var rightTrack: [SCNAction] = [wait(0.1)]
+            var leftTrack: [SCNAction] = [wait(0.22)]
+            for _ in 0..<3 {
+                rightTrack += beatRight
+                leftTrack += beatLeft
+            }
+            rightTrack += [turn(0, 0, 2.5, 0.2), wait(0.5), restRight()]
+            leftTrack += [turn(0, 0, -2.5, 0.2), wait(0.4), restLeft()]
             play([
-                (rightArm, [wait(0.1)] + beatRight + beatRight + beatRight + [turn(0, 0, 2.5, 0.2), wait(0.5), restRight()]),
-                (leftArm, [wait(0.22)] + beatLeft + beatLeft + beatLeft + [turn(0, 0, -2.5, 0.2), wait(0.4), restLeft()]),
+                (rightArm, rightTrack),
+                (leftArm, leftTrack),
                 (bobNode, [wait(1.6), hop(0.6, 0.5)]),
                 (head, [turn(-0.35, 0, 0, 0.3), wait(1.3), turn(0, 0, 0, 0.3)]),
                 front,
@@ -281,6 +299,7 @@ extension AvatarRig {
     /// Flushes red, shakes the head, stomps, and (when `turnAway`) turns their back on you.
     private func angry(turnAway: Bool) -> TimeInterval {
         setTint(NSColor(hex: 0xFF3B30), amount: 0.55)
+        if isModel { return modelAngry(turnAway: turnAway) }
         var right: [SCNAction] = [turn(0.1, 0, 0.9, 0.2), wait(1.8), restRight()]
         let left: [SCNAction] = [turn(0.1, 0, -0.9, 0.2), wait(1.8), restLeft()]
         var extra: [(SCNNode, [SCNAction])] = []
@@ -300,21 +319,28 @@ extension AvatarRig {
             return time + 0.5
         case .kungFuPanda:
             // A proper tantrum: stamping from foot to foot.
-            let stomp = [turn(-0.9, 0, 0, 0.14), turn(0, 0, 0, 0.14)]
-            extra = [
-                (rightLeg, [wait(0.2)] + stomp + [wait(0.1)] + stomp),
-                (leftLeg, [wait(0.34)] + stomp + [wait(0.1)] + stomp),
-            ]
+            let stomp: [SCNAction] = [turn(-0.9, 0, 0, 0.14), turn(0, 0, 0, 0.14)]
+            var rightStomps: [SCNAction] = [wait(0.2)]
+            var leftStomps: [SCNAction] = [wait(0.34)]
+            for _ in 0..<2 {
+                rightStomps += stomp
+                leftStomps += stomp
+                rightStomps.append(wait(0.1))
+                leftStomps.append(wait(0.1))
+            }
+            extra = [(rightLeg, rightStomps), (leftLeg, leftStomps)]
         default:
             break
         }
 
-        play([
+        var tracks: [(SCNNode, [SCNAction])] = [
             (rightArm, right),
             (leftArm, left),
             (bobNode, bob),
             (head, [turn(0, 0.6, 0, 0.12), turn(0, -0.6, 0, 0.12), turn(0, 0.6, 0, 0.12), turn(0, -0.6, 0, 0.12), turn(0, 0, 0, 0.12)]),
-        ] + extra)
+        ]
+        tracks += extra
+        play(tracks)
         if turnAway { yawNode.runAction(SCNAction.sequence([wait(1.1), turn(0, 2.8, 0, 0.5)]), forKey: "move") }
         return 2.2
     }
@@ -327,15 +353,18 @@ extension AvatarRig {
             let time = angry(turnAway: false)
             return time
         }
+        if isModel { return modelGrumble(level) }
         let hulk = character == .hulk
         // Arms crossed over the chest, or fists on the hips for Hulk.
         let crossRight = hulk ? turn(0, 0, 0.9, 0.3) : turn(-1.0, 0, -0.9, 0.3)
         let crossLeft = hulk ? turn(0, 0, -0.9, 0.3) : turn(-1.0, 0, 0.9, 0.3)
-        let tap = [turn(-0.5, 0, 0, 0.12), turn(0, 0, 0, 0.12)]
+        let tap: [SCNAction] = [turn(-0.5, 0, 0, 0.12), turn(0, 0, 0, 0.12)]
+        var tapping: [SCNAction] = [wait(0.35)]
+        for _ in 0..<4 { tapping += tap }
         var tracks: [(SCNNode, [SCNAction])] = [
             (rightArm, [crossRight, wait(1.7), restRight(0.3)]),
             (leftArm, [crossLeft, wait(1.7), restLeft(0.3)]),
-            (rightLeg, [wait(0.35)] + tap + tap + tap + tap),
+            (rightLeg, tapping),
         ]
         if level == 1 {
             tracks.append((head, [turn(0, 0, 0.25, 0.3), wait(1.4), turn(0, 0, 0, 0.3)]))
@@ -347,5 +376,143 @@ extension AvatarRig {
         }
         play(tracks)
         return 2.4
+    }
+}
+
+// MARK: - Imported models
+//
+// A model from a file has a skeleton we can't safely guess at (bone names are often anonymous and
+// it's usually frozen in a T-pose), so it acts with its whole body instead: leaning, lunging, hopping,
+// spinning and somersaulting, in the style of whoever is talking.
+
+extension AvatarRig {
+    private func lean(_ angle: CGFloat, _ time: TimeInterval, _ mode: SCNActionTimingMode = .easeInEaseOut) -> SCNAction {
+        turn(angle, 0, 0, time, mode)
+    }
+
+    private func lunge(_ distance: CGFloat, _ time: TimeInterval) -> SCNAction {
+        SCNAction.sequence([
+            SCNAction.moveBy(x: 0, y: 0, z: distance, duration: time * 0.4),
+            SCNAction.moveBy(x: 0, y: 0, z: -distance, duration: time * 0.6),
+        ])
+    }
+
+    private func spinAround(_ time: TimeInterval) -> SCNAction {
+        SCNAction.sequence([
+            SCNAction.rotateTo(x: 0, y: 2 * .pi, z: 0, duration: time),
+            SCNAction.run { node in node.eulerAngles.y = 0 },
+        ])
+    }
+
+    private func playBody(_ tracks: [(SCNNode, [SCNAction])]) {
+        for (node, actions) in tracks {
+            node.removeAction(forKey: "move")
+            node.runAction(SCNAction.sequence(actions), forKey: "move")
+        }
+    }
+
+    fileprivate func modelSignature() -> TimeInterval {
+        switch modelStyle {
+        case .kratos:
+            // Two heavy overhead chops that make the ground jump.
+            playBody([
+                (bobNode, [lean(-0.3, 0.3), SCNAction.wait(duration: 0.1), lean(0.5, 0.1, .easeIn), SCNAction.wait(duration: 0.35), lean(-0.3, 0.3), SCNAction.wait(duration: 0.05), lean(0.55, 0.1, .easeIn), SCNAction.wait(duration: 0.4), lean(0, 0.3)]),
+                (yawNode, [turn(0, 0.35, 0, 0.3), SCNAction.wait(duration: 0.6), turn(0, -0.3, 0, 0.4), turn(0, 0, 0, 0.35)]),
+            ])
+            shockwave(after: 0.5)
+            quake(after: 0.5)
+            shockwave(after: 1.25)
+            quake(after: 1.25)
+            return 2.3
+        case .kungFuPanda:
+            // Guard stance, three quick punches (lunges), then a spinning kick and a bow.
+            let punch: [SCNAction] = [SCNAction.moveBy(x: 0, y: 0, z: 0.2, duration: 0.07), SCNAction.moveBy(x: 0, y: 0, z: -0.2, duration: 0.1)]
+            var body: [SCNAction] = [lean(0.25, 0.2)]
+            body += punch
+            body += punch
+            body += punch
+            body += [SCNAction.wait(duration: 0.1), hop(0.25, 0.6), lean(0.5, 0.25), SCNAction.wait(duration: 0.2), lean(0, 0.25)]
+            playBody([
+                (bobNode, body),
+                (yawNode, [SCNAction.wait(duration: 0.9), spinAround(0.6)]),
+            ])
+            return 2.3
+        case .wukong:
+            // The cloud somersault, then a twirl.
+            flip()
+            playBody([(yawNode, [SCNAction.wait(duration: 0.9), spinAround(0.6)])])
+            shockwave(after: 0.75)
+            return 1.8
+        case .hulk:
+            // Rears back, smashes the ground, then bounds about.
+            playBody([
+                (bobNode, [lean(-0.35, 0.35), SCNAction.wait(duration: 0.1), lean(0.5, 0.1, .easeIn), SCNAction.wait(duration: 0.3), lean(0, 0.2), hop(0.6, 0.5), hop(0.6, 0.5)]),
+                (yawNode, [turn(0, 0.2, 0, 0.35), SCNAction.wait(duration: 0.2), turn(0, -0.2, 0, 0.3), turn(0, 0, 0, 0.3)]),
+            ])
+            shockwave(after: 0.55)
+            quake(after: 0.55)
+            return 2.4
+        default:
+            playBody([
+                (yawNode, [spinAround(0.9)]),
+                (bobNode, [hop(0.3, 0.45), hop(0.3, 0.45)]),
+            ])
+            return 1.2
+        }
+    }
+
+    fileprivate func modelPleased() -> TimeInterval {
+        let front = (yawNode, [turn(0, 0, 0, 0.25)])
+        switch modelStyle {
+        case .kratos:
+            // A curt, respectful nod.
+            playBody([(bobNode, [SCNAction.wait(duration: 0.2), lean(0.3, 0.35), SCNAction.wait(duration: 0.5), lean(0, 0.35)]), front])
+            return 1.5
+        case .wukong:
+            flip()
+            playBody([front])
+            return 1.3
+        case .kungFuPanda:
+            playBody([(bobNode, [hop(0.25, 0.4), hop(0.25, 0.4), lean(0.5, 0.25), SCNAction.wait(duration: 0.2), lean(0, 0.25)]), (yawNode, [spinAround(0.8)])])
+            return 1.8
+        default:
+            playBody([(bobNode, [hop(0.4, 0.5), hop(0.4, 0.5)]), (yawNode, [spinAround(0.9)])])
+            return 1.5
+        }
+    }
+
+    fileprivate func modelAngry(turnAway: Bool) -> TimeInterval {
+        var body: [SCNAction] = [SCNAction.wait(duration: 0.1), hop(0.04, 0.2), hop(0.04, 0.2), hop(0.04, 0.2), hop(0.04, 0.2)]
+        switch modelStyle {
+        case .kratos, .hulk:
+            body = [lean(-0.3, 0.3), lean(0.55, 0.1, .easeIn), SCNAction.wait(duration: 0.25), lean(-0.3, 0.3), lean(0.55, 0.1, .easeIn), SCNAction.wait(duration: 0.4), lean(0, 0.3)]
+            shockwave(after: 0.4)
+            quake(after: 0.4)
+            shockwave(after: 1.15)
+            quake(after: 1.15)
+        case .kungFuPanda:
+            body = [hop(0.1, 0.25), hop(0.1, 0.25), hop(0.1, 0.25), hop(0.1, 0.25), SCNAction.wait(duration: 0.3)]
+        default:
+            break
+        }
+        let wobble: [SCNAction] = [turn(0, 0.4, 0, 0.12), turn(0, -0.4, 0, 0.12), turn(0, 0.4, 0, 0.12), turn(0, -0.4, 0, 0.12), turn(0, 0, 0, 0.12)]
+        var yaw: [SCNAction] = [SCNAction.wait(duration: 0.1)]
+        yaw += wobble
+        if turnAway { yaw += [SCNAction.wait(duration: 0.5), turn(0, 2.8, 0, 0.5)] }
+        playBody([(bobNode, body), (yawNode, yaw)])
+        return 2.4
+    }
+
+    fileprivate func modelGrumble(_ level: Int) -> TimeInterval {
+        let tap: [SCNAction] = [hop(0.03, 0.25), hop(0.03, 0.25), hop(0.03, 0.25), hop(0.03, 0.25)]
+        var yaw: [SCNAction] = [turn(0, 0.2, 0, 0.3), SCNAction.wait(duration: 1.2), turn(0, 0, 0, 0.3)]
+        if level >= 2 {
+            setTint(NSColor(hex: 0xFF3B30), amount: 0.25)
+            yaw = [SCNAction.wait(duration: 0.2), turn(0, 0.4, 0, 0.12), turn(0, -0.4, 0, 0.12), turn(0, 0.4, 0, 0.12), turn(0, 0, 0, 0.12), SCNAction.wait(duration: 0.8)]
+        }
+        var body: [SCNAction] = [SCNAction.wait(duration: 0.3)]
+        body += tap
+        playBody([(bobNode, body), (yawNode, yaw)])
+        return 2.0
     }
 }

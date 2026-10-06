@@ -54,9 +54,9 @@ import Testing
         settings.avatar.speed = .fast
         settings.avatar.size = .large
         settings.avatar.quality = .batterySaver
-        settings.avatar.modelFileName = "model.usdz"
-        settings.avatar.modelDisplayName = "Hero"
-        settings.avatar.modelRotation = 180
+        settings.avatar.setModel(ModelSlot(character: .kratos, fileName: "model-kratos.usdz", displayName: "Kratos"), for: .kratos)
+        settings.avatar.setModel(ModelSlot(character: .model, fileName: "model-model.usdz", displayName: "Hero"), for: .model)
+        settings.avatar.setModelRotation(180, for: .kratos)
         let data = try JSONEncoder().encode(settings)
         #expect(AppSettings.decode(from: data) == settings)
     }
@@ -165,5 +165,38 @@ import Testing
         #expect(avatar.patienceTimeline(speedUp: 30).timeout == 20)
         avatar.patienceMinutes = 0
         #expect(avatar.patienceTimeline() == PatienceTimeline(grumbles: [], timeout: nil))
+    }
+
+    @Test func eachCharacterCanHaveItsOwnModel() {
+        var avatar = AvatarSettings()
+        #expect(avatar.activeModel == nil)
+        avatar.setModel(ModelSlot(character: .kratos, fileName: "model-kratos.usdz", displayName: "Kratos"), for: .kratos)
+        avatar.setModel(ModelSlot(character: .kungFuPanda, fileName: "model-kungFuPanda.usdz", displayName: "Po"), for: .kungFuPanda)
+        #expect(avatar.modelSlots.count == 2)
+        #expect(avatar.activeModel == nil, "Drip is selected and has no model")
+        avatar.character = .kratos
+        #expect(avatar.activeModel?.displayName == "Kratos")
+        avatar.character = .kungFuPanda
+        #expect(avatar.activeModel?.displayName == "Po")
+
+        // Replacing keeps one slot per character; rotation is normalized; removing clears it.
+        avatar.setModel(ModelSlot(character: .kungFuPanda, fileName: "model-kungFuPanda.usdc", displayName: "Po 2"), for: .kungFuPanda)
+        #expect(avatar.modelSlots.count == 2 && avatar.activeModel?.displayName == "Po 2")
+        avatar.setModelRotation(-90, for: .kungFuPanda)
+        #expect(avatar.activeModel?.rotation == 270)
+        avatar.setModel(nil, for: .kungFuPanda)
+        #expect(avatar.activeModel == nil && avatar.modelSlots.count == 1)
+        avatar.setModelRotation(90, for: .wukong) // no model: nothing happens
+        #expect(avatar.modelSlots.count == 1)
+    }
+
+    @Test func modelSlotsSurviveTheSettingsMerge() throws {
+        var settings = AppSettings()
+        settings.avatar.setModel(ModelSlot(character: .kratos, fileName: "model-kratos.usdz", displayName: "Kratos", rotation: 90), for: .kratos)
+        settings.avatar.setModel(ModelSlot(character: .kungFuPanda, fileName: "model-kungFuPanda.usdz", displayName: "Po"), for: .kungFuPanda)
+        let data = try JSONEncoder().encode(settings)
+        let decoded = AppSettings.decode(from: data)
+        #expect(decoded.avatar.modelSlots == settings.avatar.modelSlots)
+        #expect(decoded.avatar.modelSlot(for: .kratos)?.rotation == 90)
     }
 }

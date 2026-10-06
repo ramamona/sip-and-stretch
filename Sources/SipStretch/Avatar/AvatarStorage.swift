@@ -61,8 +61,9 @@ enum AvatarStorage {
 
     // MARK: 3D model
 
-    /// Copies a model into the app's folder (replacing any previous one) and returns the stored file name.
-    static func importModel(from source: URL) throws -> String {
+    /// Copies a model into the app's folder as the model for `character` (replacing any previous one)
+    /// and returns the stored file name.
+    static func importModel(from source: URL, for character: AvatarCharacter) throws -> String {
         let ext = source.pathExtension.lowercased()
         guard modelExtensions.contains(ext) else { throw StorageError.unsupportedType }
         let size = (try? source.resourceValues(forKeys: [.fileSizeKey]))?.fileSize ?? 0
@@ -70,16 +71,18 @@ enum AvatarStorage {
         guard size <= maxModelBytes else { throw StorageError.tooLarge }
 
         try ensureDirectory()
-        removeModels()
-        let fileName = "model.\(ext)"
+        removeModel(for: character)
+        let fileName = "\(modelPrefix(for: character)).\(ext)"
         try FileManager.default.copyItem(at: source, to: modelURL(fileName))
         return fileName
     }
 
-    static func removeModels() {
+    static func removeModel(for character: AvatarCharacter) {
         let urls = (try? FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)) ?? []
-        for url in urls where url.deletingPathExtension().lastPathComponent == "model" {
+        for url in urls where url.deletingPathExtension().lastPathComponent == modelPrefix(for: character) {
             try? FileManager.default.removeItem(at: url)
         }
     }
+
+    private static func modelPrefix(for character: AvatarCharacter) -> String { "model-\(character.rawValue)" }
 }

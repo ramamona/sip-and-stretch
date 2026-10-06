@@ -107,7 +107,7 @@ final class NudgeController {
             return
         }
         walkingID = nudge.id
-        walker.walkIn(settings: model.settings.avatar, theme: model.settings.theme, screen: screen) { [weak self] stand in
+        walker.walkIn(app: model.settings, screen: screen) { [weak self] stand in
             guard let self, self.walkingID == nudge.id, self.current?.id == nudge.id else { return }
             self.walkingID = nil
             self.display(nudge, standing: stand, on: screen)

@@ -41,7 +41,7 @@ struct AvatarPane: View {
         return Section {
             HStack(alignment: .center, spacing: 18) {
                 AvatarPreviewView(
-                    look: AvatarLook(settings: avatar, theme: theme).normalized,
+                    look: AvatarLook(app: model.settings).normalized,
                     spinning: !reduceMotion,
                     playing: previewing
                 )
@@ -76,11 +76,14 @@ struct AvatarPane: View {
     private var characterSection: some View {
         Section {
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 10)], spacing: 10) {
-                ForEach(AvatarCharacter.allCases.filter { $0 != .model || avatar.hasModel }) { character in
+                ForEach(AvatarCharacter.allCases.filter { $0 != .model || avatar.modelSlot(for: .model) != nil }) { character in
                     characterCard(character)
                 }
             }
             .padding(.vertical, 4)
+            if avatar.character != .human && avatar.character != .model {
+                modelRow(for: avatar.character)
+            }
         } header: {
             Text("Character")
         } footer: {
@@ -316,26 +319,29 @@ struct AvatarPane: View {
         photoMessage = nil
     }
 
-    // MARK: 3D model
+    // MARK: 3D models
 
-    private var modelSection: some View {
-        @Bindable var model = model
-        return Section {
+    /// Import (or replace, or remove) a detailed 3D model that stands in for `character`'s built-in look.
+    /// The character keeps its voice, lines and attitude.
+    private func modelRow(for character: AvatarCharacter) -> some View {
+        let slot = avatar.modelSlot(for: character)
+        return VStack(alignment: .leading, spacing: 8) {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(avatar.hasModel ? avatar.modelDisplayName : "No model imported").font(.rounded(13, .semibold))
-                    Text(avatar.hasModel ? "Stored on this Mac" : "USDZ, DAE, SCN or OBJ, up to 60 MB")
+                    Text(slot.map { "Using your model: \($0.displayName)" } ?? "Use a realistic 3D model for \(character.displayName)")
+                        .font(.rounded(13, .semibold))
+                    Text(slot == nil ? "USDZ, DAE, SCN or OBJ, up to 60 MB. Replaces the built-in shapes; the voice and attitude stay." : "Stored on this Mac. It moves with \(character.displayName)'s attitude: lunges, spins, somersaults.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
-                Button(avatar.hasModel ? "Replace…" : "Import 3D model…") { importModel() }
-                if avatar.hasModel {
-                    Button("Remove", role: .destructive) { removeModel() }
+                Button(slot == nil ? "Import…" : "Replace…") { importModel(for: character) }
+                if slot != nil {
+                    Button("Remove", role: .destructive) { removeModel(for: character) }
                 }
             }
-            if avatar.hasModel {
-                Picker("Turn model", selection: $model.settings.avatar.modelRotation) {
+            if slot != nil {
+                Picker("Turn model", selection: rotationBinding(for: character)) {
                     ForEach([0, 90, 180, 270], id: \.self) { Text("\($0)°").tag($0) }
                 }
                 .pickerStyle(.segmented)
@@ -343,45 +349,69 @@ struct AvatarPane: View {
             if let modelMessage {
                 Text(modelMessage).font(.caption).foregroundStyle(.secondary)
             }
+        }
+        .padding(.top, 6)
+    }
+
+    private func rotationBinding(for character: AvatarCharacter) -> Binding<Int> {
+        Binding(
+            get: { model.settings.avatar.modelSlot(for: character)?.rotation ?? 0 },
+            set: { model.settings.avatar.setModelRotation($0, for: character) }
+        )
+    }
+
+    private var modelSection: some View {
+        Section {
+            if avatar.modelSlot(for: .model) != nil || avatar.character == .model {
+                modelRow(for: .model)
+            } else {
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Any other character").font(.rounded(13, .semibold))
+                        Text("USDZ, DAE, SCN or OBJ, up to 60 MB")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Button("Import 3D model…") { importModel(for: .model) }
+                }
+            }
         } header: {
             Text("Bring your own 3D model")
         } footer: {
-            Text("For a more realistic look than the built-in shapes, import a detailed model you made, bought or are licensed to use (for example a Kratos or Hulk USDZ). It's scaled to fit and walks with a waddle; animations stored in the file play as they are. USDZ works best because textures are packed inside. Pick a voice for it below, such as Kratos.")
+            Text("For a more realistic look than the built-in shapes, import a detailed model you made, bought or are licensed to use. Pick a character above to give it that character's own model, or import one here for anyone else (then choose its voice below). Models act with their whole body: they lean, lunge, spin, hop and somersault in the style of their voice. USDZ works best because textures are packed inside.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
     }
 
-    private func importModel() {
+    private func importModel(for character: AvatarCharacter) {
         let panel = NSOpenPanel()
-        panel.title = "Choose a 3D model"
+        panel.title = "Choose a 3D model for \(character.displayName)"
         panel.allowedContentTypes = AvatarStorage.modelExtensions.compactMap { UTType(filenameExtension: $0) }
         panel.allowsMultipleSelection = false
         panel.canChooseDirectories = false
         guard panel.runModal() == .OK, let url = panel.url else { return }
         do {
-            let fileName = try AvatarStorage.importModel(from: url)
+            let fileName = try AvatarStorage.importModel(from: url, for: character)
             guard AvatarRig.loadModelNode(url: AvatarStorage.modelURL(fileName)) != nil else {
-                AvatarStorage.removeModels()
+                AvatarStorage.removeModel(for: character)
                 throw AvatarStorage.StorageError.unreadable
             }
             var updated = model.settings.avatar
-            updated.modelFileName = fileName
-            updated.modelDisplayName = url.deletingPathExtension().lastPathComponent
-            updated.modelRotation = 0
-            updated.character = .model
+            updated.setModel(ModelSlot(character: character, fileName: fileName, displayName: url.deletingPathExtension().lastPathComponent), for: character)
+            updated.character = character
             model.settings.avatar = updated
-            modelMessage = "Imported. If it faces the wrong way, turn it above."
+            modelMessage = "Imported. If it faces away from you, turn it above."
         } catch {
             modelMessage = error.localizedDescription
         }
     }
 
-    private func removeModel() {
-        AvatarStorage.removeModels()
-        model.settings.avatar.modelFileName = ""
-        model.settings.avatar.modelDisplayName = ""
-        if model.settings.avatar.character == .model { model.settings.avatar.character = .drip }
+    private func removeModel(for character: AvatarCharacter) {
+        AvatarStorage.removeModel(for: character)
+        model.settings.avatar.setModel(nil, for: character)
+        if character == .model, model.settings.avatar.character == .model { model.settings.avatar.character = .drip }
         modelMessage = nil
     }
 

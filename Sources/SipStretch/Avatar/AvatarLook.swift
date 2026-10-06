@@ -30,10 +30,16 @@ struct AvatarLook: Equatable {
     var themeDeep: UInt32
     /// Set when the custom person should wear the photo on their face; the number is the photo revision.
     var photoRevision: Int?
+    /// The imported model replacing this character's built-in shapes ("" for none).
     var modelFileName: String
     var modelRotation: Int
+    /// Who is talking: imported models have no built-in body language, so their moves follow the voice.
+    var voice: Personality
 
-    init(settings: AvatarSettings, theme: Theme) {
+    init(app: AppSettings) {
+        let settings = app.avatar
+        let theme = app.theme
+        voice = app.effectivePersonality
         character = settings.character
         gender = settings.gender
         skin = settings.skinHex
@@ -46,8 +52,8 @@ struct AvatarLook: Equatable {
         themeLight = theme.hexStops.0
         themeDeep = theme.hexStops.1
         photoRevision = settings.showsPhotoFace ? settings.photoRevision : nil
-        modelFileName = settings.hasModel ? settings.modelFileName : ""
-        modelRotation = settings.modelRotation
+        modelFileName = settings.activeModel?.fileName ?? ""
+        modelRotation = settings.activeModel?.rotation ?? 0
     }
 
     /// The same look with every field a different character wouldn't use zeroed out, so changing
@@ -69,9 +75,9 @@ struct AvatarLook: Equatable {
             look.accessories = []
             look.photoRevision = nil
         }
-        if character != .model {
-            look.modelFileName = ""
+        if modelFileName.isEmpty {
             look.modelRotation = 0
+            look.voice = .cheerful
         }
         return look
     }

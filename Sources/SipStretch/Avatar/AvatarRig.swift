@@ -120,6 +120,10 @@ final class AvatarRig {
     /// What the left hand holds (Kratos's chained blades).
     var leftProp: SCNNode?
     private(set) var character = AvatarCharacter.drip
+    /// An imported model stands in for the built-in shapes (it has no articulated limbs to pose).
+    private(set) var isModel = false
+    /// Whose body language an imported model borrows (Kratos lunges, the panda spin-kicks…).
+    private(set) var modelStyle = Personality.cheerful
     var tintBackup: [ObjectIdentifier: (contents: Any?, intensity: CGFloat)] = [:]
 
     /// Top of the character in metres (props and feathers included), for framing.
@@ -151,20 +155,22 @@ final class AvatarRig {
         }
         root.addChildNode(blob)
 
-        switch look.character {
-        case .drip: buildDrip(look)
-        case .human: buildHuman(look, facePhoto: facePhoto)
-        case .robot: buildRobot(look)
-        case .kratos: buildKratos()
-        case .kungFuPanda: buildPanda()
-        case .wukong: buildWukong()
-        case .hulk: buildHulk()
-        case .model:
-            if let modelURL, buildModel(url: modelURL, rotationDegrees: look.modelRotation) {
-                break
+        if let modelURL, !look.modelFileName.isEmpty, buildModel(url: modelURL, rotationDegrees: look.modelRotation, voice: look.voice) {
+            isModel = true
+            modelStyle = look.voice
+        } else {
+            switch look.character {
+            case .drip: buildDrip(look)
+            case .human: buildHuman(look, facePhoto: facePhoto)
+            case .robot: buildRobot(look)
+            case .kratos: buildKratos()
+            case .kungFuPanda: buildPanda()
+            case .wukong: buildWukong()
+            case .hulk: buildHulk()
+            case .model:
+                character = .drip
+                buildDrip(look) // no model (or it can't be read): fall back to Drip
             }
-            character = .drip
-            buildDrip(look) // the model went missing or can't be read: fall back to Drip
         }
         applyRestPose()
     }
