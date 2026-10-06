@@ -1,4 +1,5 @@
 import AppKit
+import SipStretchCore
 
 /// Where the photo-derived face and the imported 3D model live: `~/Library/Application Support/SipStretch/Avatar`.
 /// Files stay on this Mac and are only read when the avatar is shown.
