@@ -97,7 +97,7 @@ It's free, open source, 100% local, and small enough to read in an afternoon.
 - **Make a custom person:** choose **gender** (male, female, non-binary), skin tone, hair style and color, outfit, outfit colors and accessories (glasses, sunglasses, cap, headphones, scarf).
 - **Design an avatar from a photo:** choose or drop a photo and the custom person gets **your face** (found with on-device face detection), plus a matching skin tone and hair color you can still tweak. Photos are analysed on your Mac and never uploaded; only a small round crop of the face is kept.
 - **Want a more realistic character?** The built-in ones are stylized, hand-built shapes. In **Settings → Avatar**, pick any character (Kratos, Kung Fu Panda, Wukong, Hulk…) and **import your own detailed 3D model for it** (USDZ, DAE, SCN or OBJ, up to 60 MB; models you made, bought or are licensed to use). The model replaces the shapes while the character keeps its voice and attitude. Models act with their whole body, in the style of the character: Kratos lunges into axe chops that shake the ground, the panda throws punches and a spinning kick, Wukong does a cloud somersault, Hulk smashes and bounds. Models are scaled by height (so a T-pose isn't shrunk), and anything stored in the file's animations plays while the avatar is active. Limbs aren't posed individually, since most downloaded models have anonymous bones and are frozen in a T-pose.
-- **Tweak it:** size, walking speed, how long it waits before getting annoyed, and the frame rate.
+- **Tweak it:** size, walking speed, how long it waits before getting annoyed, the frame rate, and whether it breathes and looks around while waiting (about 12 fps) or holds perfectly still (no CPU).
 - **Light on resources:** the avatar only exists while a reminder is active; animation is capped at 15, 24 or 30 fps; SceneKit is **paused entirely** while the avatar stands still (it wakes for a gesture, then sleeps again); and its window ignores the mouse. With *Reduce Motion* on, it fades in instead of walking.
 
 > [!NOTE]
@@ -336,6 +336,7 @@ Everything lives in **Settings** (from the popover, or `sipstretch://settings`).
 | Walking speed | **Normal** | Slow / Normal / Fast |
 | Gets annoyed after | **10 minutes** | Never / 2 / 5 / 10 / 15 / 30 minutes |
 | Avatar animation | **Balanced** (24 fps) | Battery saver (15 fps) / Balanced / Smooth (30 fps) |
+| While the avatar waits | **Breathe and look around** | Breathe and look around (~12 fps) / Hold still (no CPU) |
 | Theme | **Ocean** | Ocean, Sunset, Mint, Grape, Bubblegum |
 | Menu bar display | **Countdown** | Icon only / Countdown / Water progress |
 | Launch at login | Off | On / Off |

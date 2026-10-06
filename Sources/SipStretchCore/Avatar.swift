@@ -211,6 +211,23 @@ public enum AvatarQuality: String, Codable, CaseIterable, Identifiable, Sendable
     }
 }
 
+/// What the avatar does while it stands there waiting for you.
+public enum AvatarIdle: String, Codable, CaseIterable, Identifiable, Sendable {
+    /// Freeze between gestures: nothing is rendered, so it costs no CPU at all.
+    case still
+    /// Breathe, shift its weight and look around, drawn at a low frame rate (about 12 fps).
+    case lively
+
+    public var id: String { rawValue }
+
+    public var displayName: String {
+        switch self {
+        case .still: "Hold still (no CPU)"
+        case .lively: "Breathe and look around (light)"
+        }
+    }
+}
+
 /// Color presets for the custom person, plus helpers to snap a sampled color (from a photo) to them.
 public enum AvatarPalette {
     public static let skinTones: [UInt32] = [0xFFE0C8, 0xF5CBA7, 0xE0AC84, 0xC68642, 0x9B6B43, 0x6B4423, 0x4A2F1B]
@@ -300,6 +317,8 @@ public struct AvatarSettings: Codable, Equatable, Sendable {
     /// Minutes before an unanswered reminder makes the character storm off (0 = never).
     public var patienceMinutes = 10
     public var quality: AvatarQuality = .balanced
+    /// How it behaves while waiting for you.
+    public var idle: AvatarIdle = .lively
 
     public init() {}
 

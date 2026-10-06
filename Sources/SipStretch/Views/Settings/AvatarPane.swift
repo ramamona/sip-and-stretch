@@ -351,7 +351,7 @@ struct AvatarPane: View {
                 Spacer()
                 Button(slot == nil ? "Import…" : "Replace…") { importModel(for: character) }
                 if slot != nil {
-                    Button("Remove", role: .destructive) { removeModel(for: character) }
+                    Button("Delete model", role: .destructive) { removeModel(for: character) }
                 }
             }
             if slot != nil {
@@ -390,10 +390,26 @@ struct AvatarPane: View {
                     Button("Import 3D model…") { importModel(for: .model) }
                 }
             }
+            if !avatar.modelSlots.isEmpty {
+                Divider()
+                Text("Imported models").font(.rounded(12, .bold)).foregroundStyle(.secondary)
+                ForEach(avatar.modelSlots, id: \.character) { slot in
+                    HStack {
+                        Text("\(slot.character.emoji)  \(slot.displayName)")
+                            .font(.rounded(13))
+                        Text("for \(slot.character.displayName)")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        Button("Delete", role: .destructive) { removeModel(for: slot.character) }
+                            .accessibilityLabel("Delete the model for \(slot.character.displayName)")
+                    }
+                }
+            }
         } header: {
             Text("Bring your own 3D model")
         } footer: {
-            Text("For a more realistic look than the built-in shapes, import a detailed model you made, bought or are licensed to use. Pick a character above to give it that character's own model, or import one here for anyone else (then choose its voice below). Models act with their whole body: they lean, lunge, spin, hop and somersault in the style of their voice. USDZ works best because textures are packed inside.")
+            Text("For a more realistic look than the built-in shapes, import a detailed model you made, bought or are licensed to use. Pick a character above to give it that character's own model, or import one here for anyone else (then choose its voice below). Models act with their whole body: they lean, lunge, spin, hop and somersault in the style of their voice. USDZ works best because textures are packed inside. Deleting a model only removes the copy stored by this app, never your original file.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
@@ -493,10 +509,13 @@ struct AvatarPane: View {
             Picker("Animation", selection: $model.settings.avatar.quality) {
                 ForEach(AvatarQuality.allCases) { Text($0.displayName).tag($0) }
             }
+            Picker("While waiting", selection: $model.settings.avatar.idle) {
+                ForEach(AvatarIdle.allCases) { Text($0.displayName).tag($0) }
+            }
         } header: {
             Text("Walking")
         } footer: {
-            Text("The avatar walks in from the bottom-right corner of your main screen only, even with several displays. If you ignore it, it gets more and more annoyed, then storms off after the time above. Lower frame rates use less CPU and battery; with Reduce Motion on, it fades in instead of walking.")
+            Text("The avatar walks in from the bottom-right corner of your main screen only, even with several displays. If you ignore it, it gets more and more annoyed, then storms off after the time above. Lower frame rates use less CPU and battery. The While waiting setting lets it breathe and look around at about 12 fps (a sliver of CPU), or hold perfectly still for none. With Reduce Motion on, it fades in instead of walking.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }

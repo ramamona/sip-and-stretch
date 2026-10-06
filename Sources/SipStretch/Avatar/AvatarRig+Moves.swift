@@ -390,6 +390,26 @@ extension AvatarRig {
         turn(angle, 0, 0, time, mode)
     }
 
+    /// A hop that stretches on the way up and squashes on landing (cartoon weight).
+    private func bouncyHop(_ height: CGFloat, _ time: TimeInterval) -> (jump: SCNAction, squash: SCNAction) {
+        let stretch = SCNAction.scaleX(to: 0.93, y: 1.1, z: 0.93, duration: time * 0.45)
+        let land = SCNAction.scaleX(to: 1.14, y: 0.85, z: 1.14, duration: time * 0.12)
+        let settle = SCNAction.scaleX(to: 1, y: 1, z: 1, duration: time * 0.43)
+        stretch.timingMode = .easeOut
+        settle.timingMode = .easeOut
+        return (hop(height, time), SCNAction.sequence([stretch, land, settle]))
+    }
+
+    /// Squash and stretch for an overhead slam: stretch up while winding up, flatten on impact, spring back.
+    private func slamSquash(windUp: TimeInterval, hold: TimeInterval, impact: TimeInterval, recover: TimeInterval) -> SCNAction {
+        let up = SCNAction.scaleX(to: 0.94, y: 1.1, z: 0.94, duration: windUp)
+        let flat = SCNAction.scaleX(to: 1.16, y: 0.84, z: 1.16, duration: impact)
+        let back = SCNAction.scaleX(to: 1, y: 1, z: 1, duration: recover)
+        up.timingMode = .easeOut
+        back.timingMode = .easeOut
+        return SCNAction.sequence([up, SCNAction.wait(duration: hold), flat, back])
+    }
+
     private func lunge(_ distance: CGFloat, _ time: TimeInterval) -> SCNAction {
         SCNAction.sequence([
             SCNAction.moveBy(x: 0, y: 0, z: distance, duration: time * 0.4),
@@ -419,6 +439,8 @@ extension AvatarRig {
                 (bobNode, [lean(-0.3, 0.3), SCNAction.wait(duration: 0.1), lean(0.5, 0.1, .easeIn), SCNAction.wait(duration: 0.35), lean(-0.3, 0.3), SCNAction.wait(duration: 0.05), lean(0.55, 0.1, .easeIn), SCNAction.wait(duration: 0.4), lean(0, 0.3)]),
                 (yawNode, [turn(0, 0.35, 0, 0.3), SCNAction.wait(duration: 0.6), turn(0, -0.3, 0, 0.4), turn(0, 0, 0, 0.35)]),
             ])
+            let chop = slamSquash(windUp: 0.3, hold: 0.1, impact: 0.1, recover: 0.3)
+            bobNode.runAction(SCNAction.sequence([chop, SCNAction.wait(duration: 0.05), chop]), forKey: "squash")
             shockwave(after: 0.5)
             quake(after: 0.5)
             shockwave(after: 1.25)
@@ -431,11 +453,13 @@ extension AvatarRig {
             body += punch
             body += punch
             body += punch
-            body += [SCNAction.wait(duration: 0.1), hop(0.25, 0.6), lean(0.5, 0.25), SCNAction.wait(duration: 0.2), lean(0, 0.25)]
+            let kick = bouncyHop(0.25, 0.6)
+            body += [SCNAction.wait(duration: 0.1), kick.jump, lean(0.5, 0.25), SCNAction.wait(duration: 0.2), lean(0, 0.25)]
             playBody([
                 (bobNode, body),
                 (yawNode, [SCNAction.wait(duration: 0.9), spinAround(0.6)]),
             ])
+            bobNode.runAction(SCNAction.sequence([SCNAction.wait(duration: 0.94), kick.squash]), forKey: "squash")
             return 2.3
         case .wukong:
             // The cloud somersault, then a twirl.
@@ -449,14 +473,18 @@ extension AvatarRig {
                 (bobNode, [lean(-0.35, 0.35), SCNAction.wait(duration: 0.1), lean(0.5, 0.1, .easeIn), SCNAction.wait(duration: 0.3), lean(0, 0.2), hop(0.6, 0.5), hop(0.6, 0.5)]),
                 (yawNode, [turn(0, 0.2, 0, 0.35), SCNAction.wait(duration: 0.2), turn(0, -0.2, 0, 0.3), turn(0, 0, 0, 0.3)]),
             ])
+            bobNode.runAction(slamSquash(windUp: 0.35, hold: 0.1, impact: 0.1, recover: 0.3), forKey: "squash")
             shockwave(after: 0.55)
             quake(after: 0.55)
             return 2.4
         default:
+            let first = bouncyHop(0.3, 0.45)
+            let second = bouncyHop(0.3, 0.45)
             playBody([
                 (yawNode, [spinAround(0.9)]),
-                (bobNode, [hop(0.3, 0.45), hop(0.3, 0.45)]),
+                (bobNode, [first.jump, second.jump]),
             ])
+            bobNode.runAction(SCNAction.sequence([first.squash, second.squash]), forKey: "squash")
             return 1.2
         }
     }
@@ -473,10 +501,16 @@ extension AvatarRig {
             playBody([front])
             return 1.3
         case .kungFuPanda:
-            playBody([(bobNode, [hop(0.25, 0.4), hop(0.25, 0.4), lean(0.5, 0.25), SCNAction.wait(duration: 0.2), lean(0, 0.25)]), (yawNode, [spinAround(0.8)])])
+            let first = bouncyHop(0.25, 0.4)
+            let second = bouncyHop(0.25, 0.4)
+            playBody([(bobNode, [first.jump, second.jump, lean(0.5, 0.25), SCNAction.wait(duration: 0.2), lean(0, 0.25)]), (yawNode, [spinAround(0.8)])])
+            bobNode.runAction(SCNAction.sequence([first.squash, second.squash]), forKey: "squash")
             return 1.8
         default:
-            playBody([(bobNode, [hop(0.4, 0.5), hop(0.4, 0.5)]), (yawNode, [spinAround(0.9)])])
+            let first = bouncyHop(0.4, 0.5)
+            let second = bouncyHop(0.4, 0.5)
+            playBody([(bobNode, [first.jump, second.jump]), (yawNode, [spinAround(0.9)])])
+            bobNode.runAction(SCNAction.sequence([first.squash, second.squash]), forKey: "squash")
             return 1.5
         }
     }
@@ -486,6 +520,8 @@ extension AvatarRig {
         switch modelStyle {
         case .kratos, .hulk:
             body = [lean(-0.3, 0.3), lean(0.55, 0.1, .easeIn), SCNAction.wait(duration: 0.25), lean(-0.3, 0.3), lean(0.55, 0.1, .easeIn), SCNAction.wait(duration: 0.4), lean(0, 0.3)]
+            let chop = slamSquash(windUp: 0.3, hold: 0.0, impact: 0.1, recover: 0.25)
+            bobNode.runAction(SCNAction.sequence([chop, SCNAction.wait(duration: 0.1), chop]), forKey: "squash")
             shockwave(after: 0.4)
             quake(after: 0.4)
             shockwave(after: 1.15)

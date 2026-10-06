@@ -283,6 +283,7 @@ final class AvatarRig {
         rightLeg.eulerAngles = vec(0, 0, 0)
         bobNode.position = vec(0, 0, 0)
         bobNode.eulerAngles = vec(0, 0, 0)
+        bobNode.scale = vec(1, 1, 1)
         head.eulerAngles = vec(0, 0, 0)
         prop?.eulerAngles = vec(0, 0, 0)
         leftProp?.eulerAngles = vec(0, 0, 0)
@@ -328,7 +329,24 @@ final class AvatarRig {
         down.timingMode = .easeIn
         bobNode.runAction(.repeatForever(.sequence([up, down])), forKey: "bob")
 
-        if sway > 0 {
+        if isModel {
+            // A rigid model can't move its legs, so the whole body does the work: a forward lean, a twist and
+            // roll on every step, and a squash and stretch as it bounces.
+            let lean: CGFloat = mood == .angry ? 0.2 : 0.12
+            let twist: CGFloat = mood == .angry ? 0.22 : 0.14
+            let roll = max(sway, 0.07) * (mood == .happy ? 1.4 : 1)
+            let left = SCNAction.rotateTo(x: lean, y: twist, z: roll, duration: half)
+            let right = SCNAction.rotateTo(x: lean, y: -twist, z: -roll, duration: half)
+            left.timingMode = .easeInEaseOut
+            right.timingMode = .easeInEaseOut
+            bobNode.runAction(.repeatForever(.sequence([left, right])), forKey: "sway")
+
+            let stretchUp = SCNAction.scaleX(to: 0.97, y: 1.05, z: 0.97, duration: half / 2)
+            let squashDown = SCNAction.scaleX(to: 1.04, y: 0.95, z: 1.04, duration: half / 2)
+            stretchUp.timingMode = .easeOut
+            squashDown.timingMode = .easeIn
+            bobNode.runAction(.repeatForever(.sequence([stretchUp, squashDown])), forKey: "squash")
+        } else if sway > 0 {
             let left = SCNAction.rotateTo(x: 0, y: 0, z: sway, duration: half, usesShortestUnitArc: true)
             let right = SCNAction.rotateTo(x: 0, y: 0, z: -sway, duration: half, usesShortestUnitArc: true)
             left.timingMode = .easeInEaseOut
@@ -345,6 +363,28 @@ final class AvatarRig {
         a.timingMode = .easeInEaseOut
         b.timingMode = .easeInEaseOut
         tail.runAction(.repeatForever(.sequence([a, b])), forKey: "tail")
+    }
+
+    /// Standing around, alive: slow breathing, a shift of weight and a look to either side.
+    /// Cheap (a few actions), but it keeps the scene rendering, so the walker draws it at a low frame rate.
+    func startIdleLife() {
+        let breatheIn = SCNAction.scaleX(to: 1.012, y: 1.022, z: 1.012, duration: 1.5)
+        let breatheOut = SCNAction.scaleX(to: 0.994, y: 0.988, z: 0.994, duration: 1.7)
+        breatheIn.timingMode = .easeInEaseOut
+        breatheOut.timingMode = .easeInEaseOut
+        bobNode.runAction(.repeatForever(.sequence([breatheIn, breatheOut])), forKey: "idle-breathe")
+
+        let shiftLeft = SCNAction.rotateTo(x: 0.02, y: 0.07, z: 0.025, duration: 2.2)
+        let shiftRight = SCNAction.rotateTo(x: 0, y: -0.07, z: -0.025, duration: 2.6)
+        shiftLeft.timingMode = .easeInEaseOut
+        shiftRight.timingMode = .easeInEaseOut
+        bobNode.runAction(.repeatForever(.sequence([shiftLeft, shiftRight])), forKey: "idle-shift")
+
+        let lookLeft = SCNAction.rotateTo(x: 0.04, y: 0.35, z: 0, duration: 0.9)
+        let lookRight = SCNAction.rotateTo(x: -0.02, y: -0.3, z: 0, duration: 1.1)
+        let lookBack = SCNAction.rotateTo(x: 0, y: 0, z: 0, duration: 0.8)
+        for look in [lookLeft, lookRight, lookBack] { look.timingMode = .easeInEaseOut }
+        head.runAction(.repeatForever(.sequence([.wait(duration: 2.0), lookLeft, .wait(duration: 1.2), lookBack, .wait(duration: 2.5), lookRight, .wait(duration: 1.0), lookBack])), forKey: "idle-look")
     }
 
     /// Stops whatever is playing and eases back to the standing pose.
@@ -364,6 +404,7 @@ final class AvatarRig {
             bobNode.runAction(.group([
                 .move(to: vec(0, 0, 0), duration: ease),
                 .rotateTo(x: 0, y: 0, z: 0, duration: ease, usesShortestUnitArc: true),
+                .scale(to: 1, duration: ease),
             ]))
         }
     }

@@ -54,6 +54,7 @@ import Testing
         settings.avatar.speed = .fast
         settings.avatar.size = .large
         settings.avatar.quality = .batterySaver
+        settings.avatar.idle = .still
         settings.avatar.setModel(ModelSlot(character: .kratos, fileName: "model-kratos.usdz", displayName: "Kratos"), for: .kratos)
         settings.avatar.setModel(ModelSlot(character: .model, fileName: "model-model.usdz", displayName: "Hero"), for: .model)
         settings.avatar.setModelRotation(180, for: .kratos)
@@ -198,5 +199,13 @@ import Testing
         let decoded = AppSettings.decode(from: data)
         #expect(decoded.avatar.modelSlots == settings.avatar.modelSlots)
         #expect(decoded.avatar.modelSlot(for: .kratos)?.rotation == 90)
+    }
+
+    @Test func idleDefaultsToLivelyAndPersists() throws {
+        #expect(AvatarSettings().idle == .lively)
+        var settings = AppSettings()
+        settings.avatar.idle = .still
+        #expect(AppSettings.decode(from: try JSONEncoder().encode(settings)).avatar.idle == .still)
+        #expect(AvatarIdle.allCases.allSatisfy { !$0.displayName.isEmpty })
     }
 }

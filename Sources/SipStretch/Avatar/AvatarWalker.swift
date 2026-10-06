@@ -31,6 +31,8 @@ final class AvatarWalker {
 
     private static let baseWindowSide: CGFloat = 240
     private static let walkYaw: CGFloat = 0.95
+    /// Frame rate for the quiet alive-and-breathing idle animation: slow enough to be nearly free.
+    private static let idleFramesPerSecond = 12
 
     private var phase = Phase.idle
     private var panel: NudgePanel?
@@ -277,16 +279,29 @@ final class AvatarWalker {
     private func unpause() {
         pauseTask?.cancel()
         pauseTask = nil
+        view?.preferredFramesPerSecond = settings.quality.framesPerSecond
         view?.isPlaying = true
     }
 
-    /// Once the gesture has finished, stop rendering altogether. The last frame stays on screen.
+    /// Once a gesture has finished, calm down: breathe and look around at a low frame rate, or (if the
+    /// user prefers) stop rendering altogether so it costs nothing. The last frame stays on screen.
     private func scheduleIdlePause(after seconds: Double) {
         pauseTask?.cancel()
         pauseTask = Task { [weak self] in
             try? await Task.sleep(for: .seconds(seconds))
             guard !Task.isCancelled else { return }
-            self?.view?.isPlaying = false
+            self?.settle()
+        }
+    }
+
+    private func settle() {
+        guard let view else { return }
+        if settings.idle == .lively, !reduceMotion, let rig {
+            rig.startIdleLife()
+            view.preferredFramesPerSecond = Self.idleFramesPerSecond
+            view.isPlaying = true
+        } else {
+            view.isPlaying = false
         }
     }
 }

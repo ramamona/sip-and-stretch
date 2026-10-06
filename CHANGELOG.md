@@ -14,7 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Design an avatar from a photo: on-device face detection puts your face on the custom person and suggests skin tone and hair color. Nothing is uploaded.
 - Import your own detailed 3D model (USDZ, DAE, SCN, OBJ) for any character, or as a separate avatar. A model replaces the built-in shapes but keeps the character's voice, and moves with the character's attitude (axe-chop lunges, punches and a spin kick, somersaults, smashes).
 - Four new voices (Kratos, Kung Fu Panda, Monkey King, Hulk) with their own reminders, cheers, snoozes, greetings, card titles, eye/walk lines, and how they react when skipped, snoozed, ignored or timed out. Characters talk in their own voice by default (switch off to keep your chosen personality), and read-aloud speech uses a matching pitch and pace.
-- Avatar options: size, walking speed, entry side, animation frame rate. All of it persists with your other settings.
+- Avatars stay alive while they wait: they breathe, shift their weight and look around at about 12 fps (switch to "Hold still" for zero CPU). Imported models walk with a forward lean, a twist, a roll and squash-and-stretch, and slam, hop and land with cartoon weight.
+- A list of imported models in Settings → Avatar with a Delete button for each (your original file is never touched).
+- Avatar options: size, walking speed, patience, animation frame rate, idle behaviour. All of it persists with your other settings.
 - Swipe a card toward the screen edge (trackpad or mouse drag) to dismiss it, like a notification banner.
 
 ## [1.0.0] - 2026-09-23
