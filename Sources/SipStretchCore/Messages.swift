@@ -20,6 +20,7 @@ extension Personality {
         case .kratos: return .kratos
         case .kungFuPanda: return .kungFuPanda
         case .wukong: return .wukong
+        case .hulk: return .hulk
         }
     }
 }

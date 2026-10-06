@@ -64,7 +64,7 @@ It's free, open source, 100% local, and small enough to read in an afternoon.
 
 ### 💧 Meet Drip
 - A cute droplet mascot whose **mood follows your day**: happy, excited, sleepy (during Do Not Disturb), thirsty (when you're behind on water) and stretching.
-- **11 personalities** pick how Drip talks to you, and messages can use your nickname:
+- **12 personalities** pick how Drip talks to you, and messages can use your nickname:
 
   | | Personality | | Personality |
   |---|---|---|---|
@@ -73,31 +73,35 @@ It's free, open source, 100% local, and small enough to read in an afternoon.
   | 🏴‍☠️ | Captain Hydro (pirate) | 👵 | Grandma |
   | 🪷 | Zen Master | 💪 | Gym Bro |
   | 🪓 | Kratos | 🐼 | Kung Fu Panda |
-  | 🐵 | Monkey King | | |
+  | 🐵 | Monkey King | 💚 | Hulk |
 
 - **5 themes** (accent colors): Ocean, Sunset, Mint, Grape, Bubblegum.
 
-### 🚶 A 3D avatar that walks onto your screen
-- When a reminder is due, a **3D character walks across the bottom of your screen**, stops, waves, and the nudge card appears right above it. When you finish, it cheers (and stretches along with you during guided stretches), then walks off. It never blocks clicks and **frees all of its memory** once it has left.
-- **Pick who walks:**
+### 🚶 A 3D avatar with attitude
+- When a reminder is due, a **3D character walks in from the bottom-right corner of your main screen** (only the main one, even with several displays), does its **signature move**, and the nudge card appears above it. It never blocks clicks and **frees all of its memory** once it has left.
+- **Each character has its own body language:**
 
-  | | Character | |
-  |---|---|---|
-  | 💧 | **Drip** | The classic droplet, now with legs |
-  | 🧑 | **Custom person** | Choose **gender** (male, female, non-binary), skin tone, hair style and color, outfit, outfit colors and accessories (glasses, sunglasses, cap, headphones, scarf) |
-  | 🤖 | **Robo Buddy** | Beep-boop in 3D |
-  | 🪓 | **Kratos** | A grim warrior with an icy axe |
-  | 🐼 | **Kung Fu Panda** | A chubby kung fu hero with a dumpling |
-  | 🐵 | **Wukong** | The Monkey King with his golden staff |
-  | 🧩 | **Your own 3D model** | Import a **USDZ, DAE, SCN or OBJ** file (up to 60 MB) |
+  | | Character | Signature move | When you do it | When you skip it |
+  |---|---|---|---|---|
+  | 💧 | **Drip** | Spin and hop | Cheers | Sulks |
+  | 🧑 | **Custom person** (gender, skin, hair, outfit, accessories, or your face) | Waves and dances | Cheers | Sulks |
+  | 🤖 | **Robo Buddy** | Robot dance | Cheers | Sulks |
+  | 🪓 | **Kratos** | Slams the Leviathan Axe and lashes the Blades of Chaos | Raises the axe in salute, nods | Slams the axe into the ground, turns his back |
+  | 🐼 | **Kung Fu Panda** | Guard stance, punch flurry, high kick | Cheers | Stamps his feet in a tantrum |
+  | 🐵 | **Wukong** | Windmills his golden staff overhead | Cloud somersault | Slams the staff, turns away |
+  | 💚 | **Hulk** | Smashes the ground and bounds around | Beats his chest and leaps | Smashes (twice) and storms off |
+  | 🧩 | **Your own 3D model** | Spins and hops | Cheers | Sulks |
 
+- **It has feelings.** Finish the task and it celebrates and **leaves happy** (bouncing out of the screen). Skip or dismiss it and it flushes red, sulks with a line in its own voice, and **stomps off angry**. Ignore it and it grows steadily more impatient (foot tapping, arms crossed, stomping), then **storms off after 10 minutes** (configurable, or never).
+- **Every character talks differently.** Kratos growls, the panda gets excited about dumplings, the Monkey King brags, Hulk speaks in capital letters. Reminders, cheers, snoozes, greetings, card titles, impatient and sulky lines, and read-aloud speech (with a matching pitch and pace) all use the character's own voice. Prefer your usual personality? Turn off **Talk like the character**.
+- **Make a custom person:** choose **gender** (male, female, non-binary), skin tone, hair style and color, outfit, outfit colors and accessories (glasses, sunglasses, cap, headphones, scarf).
 - **Design an avatar from a photo:** choose or drop a photo and the custom person gets **your face** (found with on-device face detection), plus a matching skin tone and hair color you can still tweak. Photos are analysed on your Mac and never uploaded; only a small round crop of the face is kept.
-- **Every character talks differently.** Kratos growls, the panda gets excited about dumplings, the Monkey King brags about his somersaults. Reminders, cheers, snoozes, greetings and read-aloud speech (with a matching pitch and pace) all use the character's own voice. Prefer your usual personality? Turn off **Talk like the character**.
-- **Tweak the walk:** size (small, medium, large), speed (slow, normal, fast), which side it walks in from, and the frame rate.
-- **Light on resources:** the avatar only exists while a reminder is active; it's built from a few dozen shapes (no big model files); animation is capped at 15, 24 or 30 fps; and SceneKit is **paused entirely** while the avatar stands still. With *Reduce Motion* on, it fades in instead of walking.
+- **Want a more realistic character?** The built-in ones are stylized, hand-built shapes. Import your own detailed **USDZ, DAE, SCN or OBJ** model (up to 60 MB) of any character you made, bought or are licensed to use, give it a voice such as Kratos, and any animation stored in the file plays while it's active.
+- **Tweak it:** size, walking speed, how long it waits before getting annoyed, and the frame rate.
+- **Light on resources:** the avatar only exists while a reminder is active; animation is capped at 15, 24 or 30 fps; SceneKit is **paused entirely** while the avatar stands still (it wakes for a gesture, then sleeps again); and its window ignores the mouse. With *Reduce Motion* on, it fades in instead of walking.
 
 > [!NOTE]
-> Kratos, Kung Fu Panda and Wukong are **fan-made homages** drawn from simple shapes and flat colors, with original lines written in their spirit. No official art, models, music or voice recordings are included, and the project isn't affiliated with or endorsed by the games and films they nod to.
+> Kratos, Kung Fu Panda, Wukong and Hulk are **fan-made homages** drawn from simple shapes and flat colors, with original lines written in their spirit. No official art, models, music or voice recordings are included, and the project isn't affiliated with or endorsed by the games, films or comics they nod to.
 
 ### 🧭 Menu bar popover
 - Drip with a greeting in your chosen personality, your **level and XP bar**.
@@ -322,15 +326,15 @@ Everything lives in **Settings** (from the popover, or `sipstretch://settings`).
 | Away threshold (idle) | **5 min** | 1 – 60 min without keyboard or mouse |
 | Delivery | **Nudge card** | Nudge card / System notification / Card + notification |
 | Card position | **Top right** | any of the four corners, or Center stage |
-| Personality | **Cheerful Coach** 🤗 | 11 personalities |
+| Personality | **Cheerful Coach** 🤗 | 12 personalities |
 | Nickname | *(empty, Drip says "friend")* | anything |
 | Walking avatar | **On** | On / Off (off = classic card in the corner) |
-| Avatar character | **Drip** 💧 | Drip, custom person, Robo Buddy, Kratos, Kung Fu Panda, Wukong, or your own 3D model |
+| Avatar character | **Drip** 💧 | Drip, custom person, Robo Buddy, Kratos, Kung Fu Panda, Wukong, Hulk, or your own 3D model |
 | Talk like the character | On | On / Off (off = use the personality above) |
 | Custom person | Non-binary, short hair, T-shirt | Gender, skin tone, hair style + color, outfit + colors, accessories, or a face from a photo |
 | Avatar size | **Medium** | Small / Medium / Large |
 | Walking speed | **Normal** | Slow / Normal / Fast |
-| Walks in from | **Across the screen** | Across the screen / left / right |
+| Gets annoyed after | **10 minutes** | Never / 2 / 5 / 10 / 15 / 30 minutes |
 | Avatar animation | **Balanced** (24 fps) | Battery saver (15 fps) / Balanced / Smooth (30 fps) |
 | Theme | **Ocean** | Ocean, Sunset, Mint, Grape, Bubblegum |
 | Menu bar display | **Countdown** | Icon only / Countdown / Water progress |
@@ -351,10 +355,10 @@ sip-and-stretch/
 │   │   ├── ReminderClock.swift       # the scheduler: when is each reminder due? (pure tick function)
 │   │   ├── Stats.swift               # glasses, stretches, XP, levels, streaks, history
 │   │   ├── Achievements.swift        # the 11 achievements and their unlock rules
-│   │   ├── Personality.swift         # the 11 personalities + MessagePack type
+│   │   ├── Personality.swift         # the 12 personalities + MessagePack type
 │   │   ├── Messages.swift            # every line each personality can say
 │   │   ├── Messages+Breaks.swift     # eye-break and walk lines
-│   │   ├── Messages+Characters.swift # Kratos, Kung Fu Panda and Monkey King lines
+│   │   ├── Messages+Characters.swift # Kratos, Kung Fu Panda, Monkey King and Hulk lines, plus how every personality reacts when ignored
 │   │   ├── Avatar.swift              # avatar characters, custom-person options, walk settings, palette
 │   │   ├── Breaks.swift              # stretch formats, challenges, walk ideas, BreakPlanner
 │   │   ├── Stretches.swift           # Stretch, BodyArea, and the picker
@@ -426,7 +430,7 @@ These are **ideas, not promises**. Pick one up if it sparks joy.
 Reminders should stay out of the way until they're needed. There's no Dock icon and no window to manage. Drip sits in the menu bar and comes out when it's time.
 
 **Can I use my own character?**
-Yes, two ways. In **Settings → Avatar**, upload a photo to give the custom person your face, or import a 3D model (USDZ works best, DAE/SCN/OBJ also load) of any character you made or have the rights to. It walks with a waddle, and you pick its voice (Kratos, Kung Fu Panda and Monkey King voices work with any avatar).
+Yes, two ways. In **Settings → Avatar**, upload a photo to give the custom person your face, or import a 3D model (USDZ works best, DAE/SCN/OBJ also load) of any character you made or have the rights to. It walks with a waddle, and you pick its voice (the Kratos, Kung Fu Panda, Monkey King and Hulk voices work with any avatar).
 
 **Does the avatar eat my battery?**
 No: it only exists while a reminder is active, animates at 15–30 fps (your choice), and pauses rendering completely while it stands still. Pick **Battery saver** to cap it at 15 fps, or turn off *Walk across the screen* in Settings → Avatar to go back to the classic corner card.
@@ -470,7 +474,7 @@ Sip & Stretch is free and always will be. If Drip saved your neck (literally), y
 
 ## 💙 Credits
 
-Drip, the personalities, the avatars, and the questionable jokes were built by the Sip & Stretch contributors. Kratos, Kung Fu Panda and Wukong are unofficial fan homages; all rights to those characters belong to their respective owners.
+Drip, the personalities, the avatars, and the questionable jokes were built by the Sip & Stretch contributors. Kratos, Kung Fu Panda, Wukong and Hulk are unofficial fan homages; all rights to those characters belong to their respective owners.
 
 <div align="center">
 

@@ -21,6 +21,8 @@ struct NudgeCardView: View {
         case activity
         case celebrate(String, xp: Int)
         case snoozed(String)
+        /// A character sulking because you skipped it (or didn't answer).
+        case reaction(title: String, line: String)
     }
 
     @Environment(AppModel.self) private var model
@@ -34,12 +36,15 @@ struct NudgeCardView: View {
 
     /// Trackpad swipes arrive from AppKit (see `ClickThroughHostingView`); mouse drags are handled here.
     let swipe: CardSwipe
+    /// Lets the controller change the message (a restless character) or say the character gave up.
+    let signals: CardSignals
     @ViewState private var dragX: CGFloat = 0
     @ViewState private var flyOutX: CGFloat = 0
 
-    init(nudge: Nudge, phase: Phase = .ask, swipe: CardSwipe = CardSwipe(), close: @escaping () -> Void) {
+    init(nudge: Nudge, phase: Phase = .ask, swipe: CardSwipe = CardSwipe(), signals: CardSignals = CardSignals(), close: @escaping () -> Void) {
         self.nudge = nudge
         self.swipe = swipe
+        self.signals = signals
         self.close = close
         _phase = ViewState(wrappedValue: phase)
     }
@@ -78,6 +83,11 @@ struct NudgeCardView: View {
         // The walking avatar stretches along during guided stretches.
         .onChange(of: phase) {
             if case .guide = phase { model.nudges.walker.setStretching(true) } else { model.nudges.walker.setStretching(false) }
+            if phase != .ask { model.nudges.engaged() }
+        }
+        // The character ran out of patience.
+        .onChange(of: signals.timedOut) {
+            if signals.timedOut, phase == .ask, let kind = nudge.content.reminderKind { skip(kind, timedOut: true) }
         }
         .animation(.spring(response: 0.4, dampingFraction: 0.8), value: phase)
         .task(id: phase) {
@@ -102,6 +112,8 @@ struct NudgeCardView: View {
             celebrate(message: message, xp: xp)
         case (_, .snoozed(let message)):
             snoozed(message: message)
+        case (_, .reaction(let title, let line)):
+            reaction(title: title, line: line)
         case (.reminder(let kind, let activity), .ask):
             ask(kind: kind, activity: activity)
         case (.reminder(_, .roulette(let area, _)), .spin):
@@ -148,11 +160,12 @@ struct NudgeCardView: View {
                         Text(nudge.title).font(.rounded(21, .bold))
                         if nudge.isPreview { previewTag }
                     }
-                    Text(nudge.message)
+                    Text(signals.line ?? nudge.message)
                         .font(.rounded(13.5))
                         .foregroundStyle(.secondary)
                         .lineLimit(3)
                         .fixedSize(horizontal: false, vertical: true)
+                        .contentTransition(.opacity)
                 }
                 .padding(.trailing, 14)
             }
@@ -260,6 +273,27 @@ struct NudgeCardView: View {
         .frame(maxHeight: .infinity)
         .task {
             try? await Task.sleep(for: .seconds(2.6))
+            close()
+        }
+    }
+
+    /// The character sulks because the reminder was skipped or ignored.
+    private func reaction(title: String, line: String) -> some View {
+        HStack(spacing: 16) {
+            MascotView(mood: .thirsty, size: 70, animated: lively)
+            VStack(alignment: .leading, spacing: 6) {
+                Text(title).font(.rounded(22, .bold))
+                Text(line)
+                    .font(.rounded(13.5))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(4)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(.trailing, 12)
+        }
+        .frame(maxHeight: .infinity)
+        .task {
+            try? await Task.sleep(for: .seconds(3.6))
             close()
         }
     }
@@ -435,18 +469,26 @@ struct NudgeCardView: View {
 
     private func startCelebration(message: String, xp: Int) {
         confettiStart = .now
-        model.nudges.walker.cheer()
+        model.nudges.walker.celebrate()
         phase = .celebrate(message, xp: xp)
     }
 
     private func snooze(_ kind: ReminderKind) {
         let minutes = model.settings[kind].snoozeMinutes
         let line = nudge.isPreview ? "(Preview) I'd be back in \(minutes) minutes." : model.snooze(kind)
+        model.nudges.walker.snoozed()
         phase = .snoozed(line)
     }
 
-    private func skip(_ kind: ReminderKind) {
+    /// Skipping (or ignoring) a reminder. With a walking character standing there, it sulks first.
+    private func skip(_ kind: ReminderKind, timedOut: Bool = false) {
         if !nudge.isPreview { model.skip(kind) }
-        close()
+        guard model.nudges.walker.isStanding else {
+            close()
+            return
+        }
+        let reaction: AvatarReaction = timedOut ? .timedOut : .skipped
+        model.nudges.walker.sulk()
+        phase = .reaction(title: model.reactionTitle(reaction), line: model.reactionLine(reaction))
     }
 }

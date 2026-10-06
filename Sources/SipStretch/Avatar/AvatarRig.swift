@@ -14,7 +14,10 @@ func vec(_ x: CGFloat, _ y: CGFloat, _ z: CGFloat) -> SCNVector3 { SCNVector3(x:
 private func material(_ hex: UInt32, glow: CGFloat = 0) -> SCNMaterial {
     let result = SCNMaterial()
     result.diffuse.contents = NSColor(hex: hex)
-    result.lightingModel = .lambert
+    // A touch of specular gives skin, fur and metal some sheen instead of flat toy plastic.
+    result.lightingModel = .blinn
+    result.specular.contents = NSColor(white: 0.22, alpha: 1)
+    result.shininess = 0.2
     if glow > 0 {
         result.emission.contents = NSColor(hex: hex)
         result.emission.intensity = glow
@@ -32,7 +35,7 @@ func shape(_ geometry: SCNGeometry, _ hex: UInt32, at position: SCNVector3 = SCN
 
 func sphereNode(_ radius: CGFloat, _ hex: UInt32, at position: SCNVector3 = SCNVector3Zero, scale: SCNVector3? = nil, glow: CGFloat = 0) -> SCNNode {
     let geometry = SCNSphere(radius: radius)
-    geometry.segmentCount = 20
+    geometry.segmentCount = 28
     let node = shape(geometry, hex, at: position, glow: glow)
     if let scale { node.scale = scale }
     return node
@@ -40,8 +43,8 @@ func sphereNode(_ radius: CGFloat, _ hex: UInt32, at position: SCNVector3 = SCNV
 
 func capsuleNode(radius: CGFloat, height: CGFloat, _ hex: UInt32, at position: SCNVector3 = SCNVector3Zero) -> SCNNode {
     let geometry = SCNCapsule(capRadius: radius, height: max(height, radius * 2 + 0.001))
-    geometry.radialSegmentCount = 18
-    geometry.capSegmentCount = 8
+    geometry.radialSegmentCount = 24
+    geometry.capSegmentCount = 12
     return shape(geometry, hex, at: position)
 }
 
@@ -55,10 +58,10 @@ func cylinderNode(radius: CGFloat, height: CGFloat, _ hex: UInt32, at position: 
     return shape(geometry, hex, at: position, glow: glow)
 }
 
-func coneNode(top: CGFloat, bottom: CGFloat, height: CGFloat, _ hex: UInt32, at position: SCNVector3 = SCNVector3Zero) -> SCNNode {
+func coneNode(top: CGFloat, bottom: CGFloat, height: CGFloat, _ hex: UInt32, at position: SCNVector3 = SCNVector3Zero, glow: CGFloat = 0) -> SCNNode {
     let geometry = SCNCone(topRadius: top, bottomRadius: bottom, height: height)
     geometry.radialSegmentCount = 20
-    return shape(geometry, hex, at: position)
+    return shape(geometry, hex, at: position, glow: glow)
 }
 
 /// A ring lying flat (axis = Y). Tilt or squash the node to wrap it around a body part.
@@ -112,6 +115,12 @@ final class AvatarRig {
     var leftLeg = SCNNode()
     var rightLeg = SCNNode()
     var tail: SCNNode?
+    /// What the right hand holds (axe, staff…), pivoting at the hand so it can spin or slam.
+    var prop: SCNNode?
+    /// What the left hand holds (Kratos's chained blades).
+    var leftProp: SCNNode?
+    private(set) var character = AvatarCharacter.drip
+    var tintBackup: [ObjectIdentifier: (contents: Any?, intensity: CGFloat)] = [:]
 
     /// Top of the character in metres (props and feathers included), for framing.
     var height: CGFloat = 1.6
@@ -130,6 +139,7 @@ final class AvatarRig {
     private(set) var isWalking = false
 
     init(look: AvatarLook, facePhoto: NSImage?, modelURL: URL?) {
+        character = look.character
         root.addChildNode(yawNode)
         yawNode.addChildNode(bobNode)
 
@@ -148,10 +158,12 @@ final class AvatarRig {
         case .kratos: buildKratos()
         case .kungFuPanda: buildPanda()
         case .wukong: buildWukong()
+        case .hulk: buildHulk()
         case .model:
             if let modelURL, buildModel(url: modelURL, rotationDegrees: look.modelRotation) {
                 break
             }
+            character = .drip
             buildDrip(look) // the model went missing or can't be read: fall back to Drip
         }
         applyRestPose()
@@ -265,6 +277,9 @@ final class AvatarRig {
         rightLeg.eulerAngles = vec(0, 0, 0)
         bobNode.position = vec(0, 0, 0)
         bobNode.eulerAngles = vec(0, 0, 0)
+        head.eulerAngles = vec(0, 0, 0)
+        prop?.eulerAngles = vec(0, 0, 0)
+        leftProp?.eulerAngles = vec(0, 0, 0)
     }
 
     /// Turns the body to `angle` radians (0 = facing the camera, ±1 = a 3/4 walking view).
@@ -280,7 +295,7 @@ final class AvatarRig {
     }
 
     /// Starts the walk cycle. `cycle` is the time for two steps, in seconds.
-    func startWalking(cycle: TimeInterval) {
+    func startWalking(cycle: TimeInterval, mood: WalkMood = .normal) {
         stopActivities(settle: true)
         isWalking = true
         let half = max(0.2, cycle / 2)
@@ -292,13 +307,17 @@ final class AvatarRig {
             back.timingMode = .easeInEaseOut
             node.runAction(.repeatForever(.sequence(positiveFirst ? [forward, back] : [back, forward])), forKey: "walk")
         }
-        swing(leftLeg, amplitude: legSwing, positiveFirst: true, z: 0)
-        swing(rightLeg, amplitude: legSwing, positiveFirst: false, z: 0)
-        swing(leftArm, amplitude: armSwing, positiveFirst: false, z: -armSplay)
-        swing(rightArm, amplitude: armSwing * rightArmFactor, positiveFirst: true, z: armSplay)
+        // A happy walk bounces and swings; an angry one stomps with stiff, heavy steps.
+        let legs = legSwing * (mood == .angry ? 1.25 : 1)
+        let arms = armSwing * (mood == .happy ? 1.5 : mood == .angry ? 0.5 : 1)
+        let hop = bounce * (mood == .happy ? 2.4 : mood == .angry ? 2.0 : 1)
+        swing(leftLeg, amplitude: legs, positiveFirst: true, z: 0)
+        swing(rightLeg, amplitude: legs, positiveFirst: false, z: 0)
+        swing(leftArm, amplitude: arms, positiveFirst: false, z: -armSplay)
+        swing(rightArm, amplitude: arms * rightArmFactor, positiveFirst: true, z: armSplay)
 
-        let up = SCNAction.moveBy(x: 0, y: bounce, z: 0, duration: half / 2)
-        let down = SCNAction.moveBy(x: 0, y: -bounce, z: 0, duration: half / 2)
+        let up = SCNAction.moveBy(x: 0, y: hop, z: 0, duration: half / 2)
+        let down = SCNAction.moveBy(x: 0, y: -hop, z: 0, duration: half / 2)
         up.timingMode = .easeOut
         down.timingMode = .easeIn
         bobNode.runAction(.repeatForever(.sequence([up, down])), forKey: "bob")
@@ -325,7 +344,9 @@ final class AvatarRig {
     /// Stops whatever is playing and eases back to the standing pose.
     func stopActivities(settle: Bool = false) {
         isWalking = false
-        for node in [leftLeg, rightLeg, leftArm, rightArm, bobNode, tail].compactMap({ $0 }) { node.removeAllActions() }
+        yawNode.removeAction(forKey: "move")
+        root.removeAction(forKey: "quake")
+        for node in [leftLeg, rightLeg, leftArm, rightArm, bobNode, tail, head, prop, leftProp].compactMap({ $0 }) { node.removeAllActions() }
         if settle {
             applyRestPose()
         } else {

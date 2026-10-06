@@ -193,6 +193,68 @@ extension MessagePack {
             "Magnificent! Even the heavenly court would applaud! 🐵",
         ]
     )
+
+    // MARK: - Hulk (loud, simple, big-hearted)
+
+    static let hulk = MessagePack(
+        waterReminders: [
+            "HULK THIRSTY. YOU THIRSTY. DRINK WATER! 💧",
+            "{name}! Hulk say: WATER NOW!",
+            "Even Hulk drink water. Puny human drink too!",
+            "{left} more glasses. HULK COUNT. YOU DRINK!",
+            "Water good. Hulk like water. You like water. 💚",
+            "Smash thirst! Drink!",
+            "Hulk not smash today if you drink water.",
+            "Cup empty? HULK SAD. Fill cup!",
+            "Gulp gulp! Hulk watching, {name}!",
+        ],
+        stretchReminders: [
+            "Hulk stretch! Back stiff like rock. Stand up, {name}!",
+            "Sit too long. Hulk get bored. STRETCH!",
+            "Reach sky! Like Hulk when jump!",
+            "Roll shoulders. Smash stiffness! 💪",
+            "Chair not friend. Stand!",
+            "Hulk stretch, you stretch. Deal?",
+            "Puny back hurt? Stretch fix!",
+        ],
+        waterCheers: [
+            "Good! Hulk proud. 💚",
+            "Yes! {name} strong like Hulk!",
+            "Glass gone! {left} left. Keep going!",
+            "HULK HAPPY! Drink more!",
+            "Smash! Thirst defeated!",
+            "Good human. Hulk give high five. ✋",
+        ],
+        stretchCheers: [
+            "HULK LIKE! You bendy now!",
+            "Good stretch! Hulk jump for joy!",
+            "Muscles happy. Hulk happy! 💪",
+            "Strong human! Hulk proud.",
+            "Stretch done. Time to smash deadlines!",
+            "{name} almost as flexible as Hulk. Almost.",
+        ],
+        snoozes: [
+            "Hulk wait. But Hulk not happy.",
+            "Okay. Hulk go smash something small.",
+            "Later. Hulk come back LOUDER.",
+            "Hulk patient. A little.",
+            "Snooze? Hulk grumble…",
+        ],
+        greetings: [
+            "Hulk here, {name}!",
+            "Hulk guard your water today. 💚",
+            "Good day to hydrate. And smash.",
+            "Hulk and {name}, team!",
+            "Puny human! …said with love.",
+            "Hulk wake up. Hulk ready!",
+        ],
+        goalReached: [
+            "WATER GOAL SMASHED! HULK PROUD! 🏆",
+            "{name} did it! Hulk jump so high!",
+            "Every glass! Hulk say: STRONGEST HUMAN!",
+            "Victory! Hulk roar for you! 💚",
+        ]
+    )
 }
 
 /// Eye-break and walk lines for the character voices (see `Personality.eyeReminders` / `walkReminders`).
@@ -250,4 +312,173 @@ enum CharacterLines {
         "Off the chair! Go wander like a free spirit! 🌿",
         "Five minutes of walking. Think of it as a tiny journey. Go!",
     ]
+
+    static let hulkEyes = [
+        "Look far, {name}. Hulk see far. You see far. 20 seconds. 👀",
+        "Screen make eyes tired. Look away! Twenty seconds!",
+        "Hulk eyes break. You eyes break. Do it.",
+        "Blink! Look far! Like looking for something to smash.",
+        "Puny eyes need rest. Look at far thing!",
+        "Far thing. Twenty seconds. HULK COUNT!",
+    ]
+
+    static let hulkWalks = [
+        "Hulk walk! Stomp stomp! Come, {name}!",
+        "Chair too soft. Walk now. 🚶",
+        "Hulk jump around. You walk. Fair!",
+        "Walk five minutes. Then smash emails.",
+        "Legs for walking! Use legs!",
+        "Stomp to kitchen and back. GO!",
+    ]
+}
+
+// MARK: - Reactions: what a character says when you don't do the thing
+
+extension Personality {
+    /// Lines for a character that was skipped, snoozed, kept waiting, or gave up and left.
+    /// Playful attitude, never mean. `{name}` works.
+    public func reactionLines(_ reaction: AvatarReaction) -> [String] {
+        switch (self, reaction) {
+        case (.kratos, .skipped): [
+            "You ignore me. Disappointing.",
+            "Skipped. I expected more of you, {name}.",
+            "Discipline fails. Do not let it become habit.",
+            "Hmph. We will speak of this later.",
+        ]
+        case (.kratos, .snoozed): [
+            "Later. Do not make me wait twice.",
+            "Delay. Weakness. …Fine.",
+            "I will return. Be ready.",
+            "Time wasted is time lost.",
+        ]
+        case (.kratos, .impatient): [
+            "I am still here, {name}.",
+            "Do not make me wait.",
+            "Silence. I am growing impatient.",
+            "Answer. Now.",
+        ]
+        case (.kratos, .timedOut): [
+            "Enough. I am leaving.",
+            "You test my patience. I am done.",
+            "No response. Then I go. Disappointed.",
+            "I waited. You did not come. Remember this.",
+        ]
+
+        case (.kungFuPanda, .skipped): [
+            "Aww, really? I walked all the way here! 🐼",
+            "Skipped?! I had a whole kung fu routine!",
+            "That's okay… I'm not crying, you're crying. 🥲",
+            "No problem! (It's a little problem.)",
+        ]
+        case (.kungFuPanda, .snoozed): [
+            "Later? Okay… I'll practise my moves.",
+            "Snooze again? I'll go eat a dumpling. 🥟",
+            "Fine! But I'll be back with extra enthusiasm!",
+            "Sure! No pressure! (Slight pressure.)",
+        ]
+        case (.kungFuPanda, .impatient): [
+            "Heeey, still here! Waving! 👋",
+            "Psst… {name}? I've done all my stretches waiting.",
+            "I could eat a dumpling in this time. I did. Twice.",
+            "Hellooo? Panda waiting!",
+        ]
+        case (.kungFuPanda, .timedOut): [
+            "I waited sooo long! I'm leaving! 😤",
+            "No answer… I'm going to find some dumplings. 🥟",
+            "Hmph! Panda out. Ask me nicely next time!",
+            "I'm not mad, I'm just… leaving dramatically!",
+        ]
+
+        case (.wukong, .skipped): [
+            "Hmph! You dismiss the Monkey King? Bold!",
+            "Skipped? Do you know who I am?!",
+            "A slight! I shall remember this, {name}. 🐒",
+            "Fine. I have clouds to ride anyway.",
+        ]
+        case (.wukong, .snoozed): [
+            "Later? A king waits for no one… but I will wait.",
+            "Delay! Very well. I'll twirl my staff.",
+            "Hmph. A little more of my patience.",
+            "Later. But mischief awaits if you forget!",
+        ]
+        case (.wukong, .impatient): [
+            "Do not keep a king waiting, {name}.",
+            "I could have crossed the sky by now! ☁️",
+            "Hellooo? My staff grows heavy.",
+            "Tick tock. Mortal time is slow.",
+        ]
+        case (.wukong, .timedOut): [
+            "Enough! I take my leave in a huff! ☁️",
+            "Ignored! I shall cause trouble elsewhere. 🐵",
+            "Hmph! The Monkey King departs!",
+            "I waited ages. I'm off!",
+        ]
+
+        case (.hulk, .skipped): [
+            "HULK SAD! You skip! HULK ANGRY!",
+            "No?! HULK SMASH… something small. Not you.",
+            "Hulk walked all way! You skip! GRR!",
+            "Hulk disappointed. HULK DISAPPOINTED.",
+        ]
+        case (.hulk, .snoozed): [
+            "Later?! Hulk wait. Hulk NOT happy.",
+            "Hulk grumble. Grrr. Later.",
+            "Okay. Hulk go smash rock. Back soon.",
+            "Snooze bad. Hulk tell you.",
+        ]
+        case (.hulk, .impatient): [
+            "HULK STILL HERE.",
+            "Human? Hulk waiting. Hulk bored!",
+            "Hulk tap foot. TAP. TAP.",
+            "Hulk getting ANGRY.",
+        ]
+        case (.hulk, .timedOut): [
+            "HULK LEAVE! HULK ANGRY! GRRR!",
+            "No answer! HULK SMASH… door on way out!",
+            "Hulk done waiting! HULK GO!",
+            "Puny human ignore Hulk! HULK LEAVE!",
+        ]
+
+        case (_, .skipped): [
+            "Skipped? Okay… I'll just stand here. 😶",
+            "Aww. That one counted for nothing.",
+            "Fine. Fine! I'm not upset. (I'm a little upset.)",
+            "Noted. I came all this way, {name}… 🥺",
+        ]
+        case (_, .snoozed): [
+            "Later, then. I'll be back.",
+            "Snooze again? Okay, but I'm watching. 👀",
+            "Mm-hm. Sure. Later.",
+            "I'll wait. But I'll sigh a little.",
+        ]
+        case (_, .impatient): [
+            "Hello? Still here…",
+            "I've been standing here a while, {name}. 👀",
+            "Tap tap. Any time now?",
+            "Hellooo? Your reminder is still waiting.",
+        ]
+        case (_, .timedOut): [
+            "Okay, I'm leaving. I waited so long!",
+            "No answer? I'll take my reminder and go. 😤",
+            "Fine, I'm off. See you next time.",
+            "Left on read. I'm going home. 😒",
+        ]
+        }
+    }
+
+    /// A short headline for the card when a character reacts (skipped or timed out).
+    public func reactionTitle(_ reaction: AvatarReaction) -> String {
+        switch (self, reaction) {
+        case (.kratos, .timedOut): "Enough."
+        case (.kratos, _): "Disappointing."
+        case (.kungFuPanda, .timedOut): "I waited..."
+        case (.kungFuPanda, _): "Aww, really?"
+        case (.wukong, .timedOut): "Insolence!"
+        case (.wukong, _): "Hmph!"
+        case (.hulk, .timedOut): "HULK LEAVE!"
+        case (.hulk, _): "HULK ANGRY!"
+        case (_, .timedOut): "No answer?"
+        case (_, _): "Aww, skipped?"
+        }
+    }
 }

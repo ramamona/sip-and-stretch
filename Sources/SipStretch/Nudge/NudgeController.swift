@@ -18,6 +18,10 @@ final class NudgeController {
     private var walkingID: UUID?
     /// How the current card slid in, so it can slide back out the same way.
     private var slide = CGSize.zero
+    /// Lets the controller talk to the card on screen (a character's impatient lines, giving up).
+    private var signals = CardSignals()
+    /// Counts down while a walking character waits for an answer.
+    private var patienceTask: Task<Void, Never>?
 
     func present(_ nudge: Nudge) {
         // One card per reminder kind: a second water reminder while one is waiting adds nothing.
@@ -37,8 +41,15 @@ final class NudgeController {
         if let current, current.content.reminderKind == kind { close(current) }
     }
 
+    /// The user reacted to the card (started a stretch, snoozed…), so the character stops getting restless.
+    func engaged() {
+        patienceTask?.cancel()
+        patienceTask = nil
+    }
+
     func close(_ nudge: Nudge) {
         guard current?.id == nudge.id, closingID != nudge.id else { return }
+        engaged()
         if walkingID == nudge.id {
             // Dismissed or stashed while the avatar was still walking in: no card is up yet, so stop the walk.
             walkingID = nil
@@ -89,21 +100,42 @@ final class NudgeController {
         let nudge = queue.remove(at: index)
         current = nudge
 
-        guard usesWalker(nudge), let screen = activeScreen() else {
+        // The avatar only ever walks on the main display (the one with the menu bar).
+        guard usesWalker(nudge), let screen = NSScreen.screens.first else {
             walker.leave()
             display(nudge, standing: nil, on: nil)
             return
         }
         walkingID = nudge.id
-        walker.walkIn(
-            settings: model.settings.avatar,
-            theme: model.settings.theme,
-            screen: screen,
-            standCenterX: standingX(on: screen, position: model.settings.cardPosition)
-        ) { [weak self] stand in
+        walker.walkIn(settings: model.settings.avatar, theme: model.settings.theme, screen: screen) { [weak self] stand in
             guard let self, self.walkingID == nudge.id, self.current?.id == nudge.id else { return }
             self.walkingID = nil
             self.display(nudge, standing: stand, on: screen)
+        }
+    }
+
+    /// While a character waits for an answer it gets more and more restless, and finally storms off.
+    /// Previews run 30 times faster so you can see it without waiting ten minutes.
+    private func startWaiting(for nudge: Nudge) {
+        patienceTask?.cancel()
+        patienceTask = nil
+        guard let model, nudge.content.reminderKind != nil else { return }
+        let timeline = model.settings.avatar.patienceTimeline(speedUp: nudge.isPreview ? 30 : 1)
+        guard !timeline.grumbles.isEmpty || timeline.timeout != nil else { return }
+        let signals = self.signals
+        patienceTask = Task { [weak self] in
+            var elapsed: TimeInterval = 0
+            for (index, time) in timeline.grumbles.enumerated() {
+                try? await Task.sleep(for: .seconds(max(0, time - elapsed)))
+                guard !Task.isCancelled, let self, self.current?.id == nudge.id else { return }
+                elapsed = time
+                signals.line = self.model?.reactionLine(.impatient)
+                self.walker.grumble(level: index + 1)
+            }
+            guard let timeout = timeline.timeout else { return }
+            try? await Task.sleep(for: .seconds(max(0, timeout - elapsed)))
+            guard !Task.isCancelled, let self, self.current?.id == nudge.id else { return }
+            signals.timedOut = true
         }
     }
 
@@ -118,7 +150,8 @@ final class NudgeController {
     private func display(_ nudge: Nudge, standing stand: WalkerStand?, on screen: NSScreen?) {
         guard let model else { return }
         let swipe = CardSwipe()
-        let card = NudgeCardView(nudge: nudge, swipe: swipe) { [weak self] in self?.close(nudge) }
+        signals = CardSignals()
+        let card = NudgeCardView(nudge: nudge, swipe: swipe, signals: signals) { [weak self] in self?.close(nudge) }
             .environment(model)
         let hosting = ClickThroughHostingView(rootView: card)
         hosting.swipe = swipe
@@ -148,6 +181,8 @@ final class NudgeController {
             panel.animator().alphaValue = 1
             panel.animator().setFrame(target, display: true)
         }
+
+        if stand != nil { startWaiting(for: nudge) }
 
         // The panel never takes focus, so tell VoiceOver users what just appeared.
         if !model.settings.speakReminders, !nudge.message.isEmpty {
@@ -188,17 +223,6 @@ final class NudgeController {
         case .center: CGPoint(x: visible.midX - size.width / 2, y: visible.midY - size.height / 2 + visible.height * 0.12)
         }
         return NSRect(origin: origin, size: size)
-    }
-
-    /// Where the avatar should stop: under the spot the card would normally occupy (left, right or middle).
-    private func standingX(on screen: NSScreen, position: CardPosition) -> CGFloat {
-        let visible = screen.visibleFrame
-        let half = NudgeCardView.panelSize.width / 2
-        return switch position {
-        case .topRight, .bottomRight: visible.maxX - half - 4
-        case .topLeft, .bottomLeft: visible.minX + half + 4
-        case .center: visible.midX
-        }
     }
 
     /// A card just above the standing avatar's head, kept on screen.
@@ -272,4 +296,13 @@ final class CardSwipe {
     var offset: CGFloat = 0
     /// Bumped when the fingers lift, so the card can decide: dismiss or snap back.
     var releases = 0
+}
+
+/// What the controller wants to tell the card on screen. Only touched on the main thread.
+@Observable
+final class CardSignals {
+    /// A line from the (restless) character that replaces the card's message.
+    var line: String?
+    /// The character ran out of patience.
+    var timedOut = false
 }

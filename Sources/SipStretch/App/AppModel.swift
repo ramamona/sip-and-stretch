@@ -197,6 +197,15 @@ final class AppModel {
         return MessagePack.render(template, name: settings.nickname, left: waterLeft)
     }
 
+    /// What the avatar says when you skip it, snooze it, keep it waiting, or it gives up.
+    func reactionLine(_ reaction: AvatarReaction) -> String {
+        line(settings.effectivePersonality.reactionLines(reaction), key: "reaction-\(reaction.rawValue)")
+    }
+
+    func reactionTitle(_ reaction: AvatarReaction) -> String {
+        settings.effectivePersonality.reactionTitle(reaction)
+    }
+
     func refreshGreeting() {
         greeting = line(settings.effectivePersonality.pack.greetings, key: "greeting")
     }

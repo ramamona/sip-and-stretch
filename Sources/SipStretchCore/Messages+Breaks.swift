@@ -83,6 +83,7 @@ extension Personality {
         case .kratos: CharacterLines.kratosEyes
         case .kungFuPanda: CharacterLines.pandaEyes
         case .wukong: CharacterLines.wukongEyes
+        case .hulk: CharacterLines.hulkEyes
         }
     }
 
@@ -155,6 +156,7 @@ extension Personality {
         case .kratos: CharacterLines.kratosWalks
         case .kungFuPanda: CharacterLines.pandaWalks
         case .wukong: CharacterLines.wukongWalks
+        case .hulk: CharacterLines.hulkWalks
         }
     }
 }

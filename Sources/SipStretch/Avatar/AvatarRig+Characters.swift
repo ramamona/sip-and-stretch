@@ -230,47 +230,77 @@ extension AvatarRig {
     // MARK: Kratos (fan-made)
 
     func buildKratos() {
-        let b = Biped(headRadius: 0.26, torsoWidth: 0.6, torsoHeight: 0.6, legLength: 0.55, legRadius: 0.1, armLength: 0.55, armRadius: 0.105)
-        let ash: UInt32 = 0xD9D3CB
+        let b = Biped(headRadius: 0.25, torsoWidth: 0.66, torsoHeight: 0.62, legLength: 0.55, legRadius: 0.105, armLength: 0.56, armRadius: 0.115)
+        let ash: UInt32 = 0xCFC8BE
         let leather: UInt32 = 0x4A3322
         assemble(b, headColor: ash, torsoColor: ash, armColor: ash, handColor: ash, legColor: 0x3A312B, shoeColor: 0x2A221D)
         let r = b.headRadius
+        let chestY = b.legLength + b.torsoTall * 0.72
 
-        addFace(radius: r, mouth: .flat, eyeColor: 0x2B1D14, blush: false)
-        addBrows(radius: r, color: 0x2B1D14, angle: 0.4)
-        // Red war paint down one side of the face: a ring around the head's X axis.
-        let paint = ringNode(radius: r * 0.965, pipe: r * 0.06, 0xB0261E, at: vec(-r * 0.28, 0, 0))
+        // A bull neck, heavy pecs and deltoids: Kratos is built like a wall.
+        bobNode.addChildNode(cylinderNode(radius: 0.11, height: 0.14, ash, at: vec(0, b.legLength + b.torsoTall + 0.02, 0)))
+        for side in [CGFloat(-1), 1] {
+            bobNode.addChildNode(sphereNode(0.15, ash, at: vec(side * 0.15, chestY, b.torsoDepth / 2 - 0.035), scale: vec(1, 0.8, 0.7)))
+            bobNode.addChildNode(sphereNode(0.1, 0xC2BAAE, at: vec(side * 0.1, b.legLength + b.torsoTall * 0.3, b.torsoDepth / 2 - 0.01), scale: vec(1, 0.6, 0.5)))
+        }
+        for arm in [leftArm, rightArm] {
+            arm.addChildNode(sphereNode(b.armRadius * 1.4, ash, at: vec(0, 0.015, 0), scale: vec(1, 1.05, 1)))
+            arm.addChildNode(cylinderNode(radius: b.armRadius * 1.2, height: 0.2, 0x6B4E2E, at: vec(0, -b.armLength * 0.72, 0)))
+        }
+
+        // A scowling face: heavy brow, white war paint down one side, a dark beard.
+        addFace(radius: r, mouth: .flat, eyeColor: 0x1B1410, blush: false)
+        addBrows(radius: r, color: 0x1B1410, angle: 0.45)
+        let paint = ringNode(radius: r * 0.965, pipe: r * 0.065, 0xB0261E, at: vec(-r * 0.28, 0, 0))
         paint.eulerAngles = vec(0, 0, .pi / 2)
         head.addChildNode(paint)
-        head.addChildNode(sphereNode(r * 0.62, 0x4B3B2F, at: vec(0, -r * 0.5, r * 0.42), scale: vec(0.95, 0.75, 0.75)))
+        head.addChildNode(sphereNode(r * 0.66, 0x3E2F25, at: vec(0, -r * 0.5, r * 0.4), scale: vec(0.95, 0.8, 0.78)))
+        head.addChildNode(sphereNode(r * 0.2, 0x3E2F25, at: vec(0, -r * 0.95, r * 0.5), scale: vec(0.8, 1.3, 0.7)))
 
-        // Belt, loincloth and a leather strap across the chest (a tilted ring wraps the torso).
-        let belt = ringNode(radius: b.torsoWidth / 2 + 0.005, pipe: 0.045, leather, at: vec(0, b.legLength + 0.04, 0))
+        // Armor: belt, tassets, a leather chest strap and a fur-lined shoulder.
+        let belt = ringNode(radius: b.torsoWidth / 2 + 0.005, pipe: 0.05, leather, at: vec(0, b.legLength + 0.04, 0))
         belt.scale = vec(1, 1, 0.72)
         bobNode.addChildNode(belt)
-        bobNode.addChildNode(boxNode(0.3, 0.38, 0.03, 0x6E2B22, at: vec(0, b.legLength - 0.15, b.torsoDepth / 2 + 0.02)))
-        let strap = ringNode(radius: b.torsoWidth / 2 + 0.004, pipe: 0.03, leather, at: vec(0, b.legLength + b.torsoTall * 0.55, 0))
+        bobNode.addChildNode(boxNode(0.32, 0.4, 0.03, 0x6E2B22, at: vec(0, b.legLength - 0.16, b.torsoDepth / 2 + 0.02)))
+        bobNode.addChildNode(boxNode(0.32, 0.36, 0.03, 0x6E2B22, at: vec(0, b.legLength - 0.14, -b.torsoDepth / 2 - 0.02)))
+        let strap = ringNode(radius: b.torsoWidth / 2 + 0.004, pipe: 0.032, leather, at: vec(0, b.legLength + b.torsoTall * 0.55, 0))
         strap.scale = vec(1, 1, 0.72)
         strap.eulerAngles = vec(0, 0, 0.55)
         bobNode.addChildNode(strap)
+        leftArm.addChildNode(sphereNode(0.17, 0x5B4A3A, at: vec(0, 0.03, 0), scale: vec(1.15, 0.8, 1.05)))
 
-        for arm in [leftArm, rightArm] {
-            arm.addChildNode(cylinderNode(radius: b.armRadius * 1.18, height: 0.2, 0x6B4E2E, at: vec(0, -b.armLength * 0.72, 0)))
+        // The Leviathan Axe in the right hand (on a pivot so it can swing)...
+        let axe = SCNNode()
+        axe.position = vec(0, -b.armLength, 0)
+        axe.addChildNode(cylinderNode(radius: 0.03, height: 0.85, 0x6B4A2B, at: vec(0, 0.13, 0)))
+        axe.addChildNode(boxNode(0.32, 0.22, 0.04, 0xCFEFFF, at: vec(0.17, 0.4, 0), chamfer: 0.012, glow: 0.4))
+        axe.addChildNode(boxNode(0.1, 0.12, 0.035, 0x8FB8CC, at: vec(-0.08, 0.4, 0)))
+        for i in 0..<3 {
+            axe.addChildNode(ringNode(radius: 0.034, pipe: 0.008, 0xCFEFFF, at: vec(0, 0.02 + CGFloat(i) * 0.06, 0)))
         }
-        leftArm.addChildNode(sphereNode(0.15, 0x5B4A3A, at: vec(0, 0.02, 0), scale: vec(1.1, 0.8, 1)))
+        rightArm.addChildNode(axe)
+        prop = axe
 
-        // The icy axe, held in the right hand.
-        let handY = -b.armLength + 0.12
-        rightArm.addChildNode(cylinderNode(radius: 0.028, height: 0.8, 0x6B4A2B, at: vec(0, handY, 0)))
-        rightArm.addChildNode(boxNode(0.3, 0.2, 0.035, 0xBFE9FF, at: vec(0.16, handY + 0.3, 0), chamfer: 0.01, glow: 0.35))
-        rightArm.addChildNode(boxNode(0.08, 0.1, 0.03, 0x8FB8CC, at: vec(-0.07, handY + 0.3, 0)))
+        // ...and the Blades of Chaos: chains wrapped round the left forearm, a flaming blade at the end.
+        for i in 0..<4 {
+            let coil = ringNode(radius: b.armRadius * 1.25, pipe: 0.014, 0x9A9A9A, at: vec(0, -b.armLength * (0.3 + 0.1 * CGFloat(i)), 0))
+            leftArm.addChildNode(coil)
+        }
+        let blades = SCNNode()
+        blades.position = vec(0, -b.armLength, 0)
+        blades.addChildNode(cylinderNode(radius: 0.012, height: 0.34, 0x9A9A9A, at: vec(0.04, -0.17, 0.03)))
+        blades.addChildNode(coneNode(top: 0.05, bottom: 0, height: 0.26, 0xFF8A2A, at: vec(0.04, -0.47, 0.03), glow: 0.9))
+        leftArm.addChildNode(blades)
+        leftProp = blades
+
         rightArmFactor = 0.25
         canWave = false
-        armSplay = 0.16
+        armSplay = 0.2
 
         root.scale = vec(1.1, 1.1, 1.1)
         height = b.totalHeight * 1.1
         legSwing = 0.5
+        armSwing = 0.45
         bounce = 0.03
     }
 
@@ -373,16 +403,70 @@ extension AvatarRig {
         bobNode.addChildNode(tailNode)
         tail = tailNode
 
-        // The golden staff, planted like a walking stick.
-        let staffY = -b.armLength + 0.4
-        rightArm.addChildNode(cylinderNode(radius: 0.032, height: 1.5, 0xB22A2A, at: vec(0, staffY, 0)))
-        rightArm.addChildNode(cylinderNode(radius: 0.045, height: 0.14, gold, at: vec(0, staffY + 0.75, 0)))
-        rightArm.addChildNode(cylinderNode(radius: 0.045, height: 0.14, gold, at: vec(0, staffY - 0.75, 0)))
+        // The golden staff, planted like a walking stick (on a pivot at the hand so it can spin).
+        let staff = SCNNode()
+        staff.position = vec(0, -b.armLength, 0)
+        staff.addChildNode(cylinderNode(radius: 0.032, height: 1.5, 0xB22A2A, at: vec(0, 0.4, 0)))
+        staff.addChildNode(cylinderNode(radius: 0.047, height: 0.14, gold, at: vec(0, 1.15, 0)))
+        staff.addChildNode(cylinderNode(radius: 0.047, height: 0.14, gold, at: vec(0, -0.35, 0)))
+        staff.addChildNode(ringNode(radius: 0.036, pipe: 0.01, gold, at: vec(0, 0.55, 0)))
+        staff.addChildNode(ringNode(radius: 0.036, pipe: 0.01, gold, at: vec(0, 0.25, 0)))
+        rightArm.addChildNode(staff)
+        prop = staff
         rightArmFactor = 0.2
         canWave = false
 
         height = b.headCenterY + r * 0.95 + 0.46
         legSwing = 0.55
+    }
+
+    // MARK: Hulk (fan-made)
+
+    func buildHulk() {
+        let b = Biped(headRadius: 0.21, torsoWidth: 0.86, torsoHeight: 0.8, legLength: 0.45, legRadius: 0.15, armLength: 0.6, armRadius: 0.16)
+        let green: UInt32 = 0x5DAA3A
+        let deepGreen: UInt32 = 0x4B9230
+        let purple: UInt32 = 0x6E4B9E
+        assemble(b, headColor: green, torsoColor: green, armColor: green, handColor: green, legColor: green, shoeColor: deepGreen)
+        let r = b.headRadius
+        let chestY = b.legLength + b.torsoTall * 0.72
+
+        // Slabs of muscle: traps, pecs, abs and gigantic shoulders.
+        for side in [CGFloat(-1), 1] {
+            bobNode.addChildNode(sphereNode(0.2, green, at: vec(side * 0.2, b.legLength + b.torsoTall + 0.0, 0), scale: vec(1, 0.8, 0.9)))
+            bobNode.addChildNode(sphereNode(0.2, green, at: vec(side * 0.2, chestY, b.torsoDepth / 2 - 0.05), scale: vec(1, 0.8, 0.6)))
+            for row in 0..<3 {
+                bobNode.addChildNode(sphereNode(0.075, deepGreen, at: vec(side * 0.075, b.legLength + b.torsoTall * 0.5 - CGFloat(row) * 0.14, b.torsoDepth / 2 - 0.005), scale: vec(1, 0.8, 0.5)))
+            }
+        }
+        for arm in [leftArm, rightArm] {
+            arm.addChildNode(sphereNode(b.armRadius * 1.45, green, at: vec(0, 0.0, 0)))
+        }
+
+        // Torn purple shorts.
+        for leg in [leftLeg, rightLeg] {
+            leg.addChildNode(cylinderNode(radius: b.legRadius * 1.12, height: b.legLength * 0.62, purple, at: vec(0, -b.legLength * 0.3, 0)))
+        }
+        let waist = ringNode(radius: b.torsoWidth / 2 + 0.005, pipe: 0.06, purple, at: vec(0, b.legLength + 0.06, 0))
+        waist.scale = vec(1, 1, 0.72)
+        bobNode.addChildNode(waist)
+
+        // A small head with a heavy brow, a big jaw and wild dark hair.
+        head.addChildNode(sphereNode(r * 0.8, green, at: vec(0, -r * 0.55, r * 0.15), scale: vec(1.15, 0.75, 0.9)))
+        addFace(radius: r, mouth: .flat, eyeColor: 0xE6FFC4, blush: false)
+        addBrows(radius: r, color: 0x1F2A18, angle: 0.6)
+        head.addChildNode(sphereNode(r * 1.08, 0x1A1A1A, at: vec(0, r * 0.25, -r * 0.3), scale: vec(1, 0.85, 1)))
+        for i in 0..<5 {
+            head.addChildNode(sphereNode(r * 0.3, 0x1A1A1A, at: vec((CGFloat(i) - 2) * r * 0.32, r * 0.95, -r * 0.1 + CGFloat(i % 2) * r * 0.2)))
+        }
+
+        root.scale = vec(1.05, 1.05, 1.05)
+        height = b.totalHeight * 1.05
+        legSwing = 0.5
+        armSwing = 0.35
+        armSplay = 0.45
+        bounce = 0.06
+        sway = 0.03
     }
 
     // MARK: Imported model
@@ -414,6 +498,15 @@ extension AvatarRig {
         holder.eulerAngles = vec(0, CGFloat(rotationDegrees) * .pi / 180, 0)
         holder.addChildNode(container)
         bobNode.addChildNode(holder)
+
+        // Animations that ship inside the model (walk cycles, idle loops) play while the avatar is active.
+        container.enumerateHierarchy { node, _ in
+            for key in node.animationKeys {
+                guard let player = node.animationPlayer(forKey: key) else { continue }
+                player.animation.repeatCount = .infinity
+                player.play()
+            }
+        }
 
         height = modelHeight * scale + 0.1
         sway = 0.07

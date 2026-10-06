@@ -12,7 +12,7 @@ public enum AvatarCharacter: String, Codable, CaseIterable, Identifiable, Sendab
     case human
     case robot
     // Fan-made homages built from simple shapes. No official art, models or audio are included.
-    case kratos, kungFuPanda, wukong
+    case kratos, kungFuPanda, wukong, hulk
     /// A 3D model file (USDZ, DAE, OBJ, SCN) the user imported.
     case model
 
@@ -26,6 +26,7 @@ public enum AvatarCharacter: String, Codable, CaseIterable, Identifiable, Sendab
         case .kratos: "Kratos"
         case .kungFuPanda: "Kung Fu Panda"
         case .wukong: "Wukong"
+        case .hulk: "Hulk"
         case .model: "My 3D model"
         }
     }
@@ -38,6 +39,7 @@ public enum AvatarCharacter: String, Codable, CaseIterable, Identifiable, Sendab
         case .kratos: "🪓"
         case .kungFuPanda: "🐼"
         case .wukong: "🐵"
+        case .hulk: "💚"
         case .model: "🧩"
         }
     }
@@ -50,6 +52,7 @@ public enum AvatarCharacter: String, Codable, CaseIterable, Identifiable, Sendab
         case .kratos: "A grim warrior who takes hydration seriously."
         case .kungFuPanda: "A chubby kung fu hero. Snacks are fuel."
         case .wukong: "The mischievous Monkey King with his golden staff."
+        case .hulk: "A big green smasher who jumps around."
         case .model: "Bring your own 3D model."
         }
     }
@@ -57,7 +60,7 @@ public enum AvatarCharacter: String, Codable, CaseIterable, Identifiable, Sendab
     /// Characters built into the app that are inspired by existing franchises.
     public var isFanMade: Bool {
         switch self {
-        case .kratos, .kungFuPanda, .wukong: true
+        case .kratos, .kungFuPanda, .wukong, .hulk: true
         default: false
         }
     }
@@ -69,6 +72,7 @@ public enum AvatarCharacter: String, Codable, CaseIterable, Identifiable, Sendab
         case .kratos: .kratos
         case .kungFuPanda: .kungFuPanda
         case .wukong: .wukong
+        case .hulk: .hulk
         case .drip, .human, .model: nil
         }
     }
@@ -174,28 +178,12 @@ public enum WalkSpeed: String, Codable, CaseIterable, Identifiable, Sendable {
 
     public var displayName: String { rawValue.capitalized }
 
-    /// How fast the avatar crosses the screen, in points per second.
+    /// How fast the avatar walks, in points per second.
     public var pointsPerSecond: Double {
         switch self {
-        case .slow: 120
-        case .normal: 200
-        case .fast: 340
-        }
-    }
-}
-
-/// Which side of the screen the avatar walks in from.
-public enum WalkEntry: String, Codable, CaseIterable, Identifiable, Sendable {
-    /// From the side opposite the card, so it crosses the whole screen.
-    case auto, left, right
-
-    public var id: String { rawValue }
-
-    public var displayName: String {
-        switch self {
-        case .auto: "Across the screen"
-        case .left: "From the left"
-        case .right: "From the right"
+        case .slow: 70
+        case .normal: 110
+        case .fast: 180
         }
     }
 }
@@ -294,7 +282,8 @@ public struct AvatarSettings: Codable, Equatable, Sendable {
     // Walking
     public var size: AvatarSize = .medium
     public var speed: WalkSpeed = .normal
-    public var entry: WalkEntry = .auto
+    /// Minutes before an unanswered reminder makes the character storm off (0 = never).
+    public var patienceMinutes = 10
     public var quality: AvatarQuality = .balanced
 
     public init() {}
@@ -312,5 +301,34 @@ extension AppSettings {
     public var effectivePersonality: Personality {
         if avatar.matchVoiceToCharacter, let voice = avatar.character.voice { return voice }
         return personality
+    }
+}
+
+/// How a character reacts when you don't do what it asked.
+public enum AvatarReaction: String, CaseIterable, Sendable {
+    /// Dismissed or skipped the reminder.
+    case skipped
+    /// Pushed the reminder back.
+    case snoozed
+    /// Still waiting for an answer.
+    case impatient
+    /// Waited too long and gave up.
+    case timedOut
+}
+
+/// When an unanswered character gets restless and when it finally storms off.
+public struct PatienceTimeline: Equatable, Sendable {
+    /// Seconds after the character appears at which it shows impatience, in increasing anger.
+    public var grumbles: [TimeInterval]
+    /// Seconds after which it gives up and leaves, or nil if it waits forever.
+    public var timeout: TimeInterval?
+}
+
+extension AvatarSettings {
+    /// `speedUp` compresses time so previews don't take ten minutes.
+    public func patienceTimeline(speedUp: Double = 1) -> PatienceTimeline {
+        guard patienceMinutes > 0 else { return PatienceTimeline(grumbles: [], timeout: nil) }
+        let total = TimeInterval(patienceMinutes * 60) / max(1, speedUp)
+        return PatienceTimeline(grumbles: [0.15, 0.4, 0.7].map { $0 * total }, timeout: total)
     }
 }

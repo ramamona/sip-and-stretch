@@ -7,7 +7,7 @@ import SwiftUI
 @MainActor
 enum AvatarStage {
     /// How many metres of scene the window shows top to bottom.
-    static let visibleHeight: CGFloat = 2.3
+    static let visibleHeight: CGFloat = 2.7
     /// The feet stand this far (metres) above the bottom edge of the view, leaving room for the shadow.
     static let groundInset: CGFloat = 0.15
     private static let fieldOfView: CGFloat = 24
@@ -40,18 +40,37 @@ enum AvatarStage {
 
         let ambient = SCNLight()
         ambient.type = .ambient
-        ambient.intensity = 420
+        ambient.intensity = 360
         let ambientNode = SCNNode()
         ambientNode.light = ambient
         scene.rootNode.addChildNode(ambientNode)
 
         let key = SCNLight()
         key.type = .directional
-        key.intensity = 650
+        key.intensity = 620
         let keyNode = SCNNode()
         keyNode.light = key
         keyNode.eulerAngles = vec(-0.7, -0.5, 0)
         scene.rootNode.addChildNode(keyNode)
+
+        // A cool rim light from behind-right separates the silhouette from any background, and a soft
+        // fill from the left keeps the shadow side from going muddy.
+        let rim = SCNLight()
+        rim.type = .directional
+        rim.intensity = 380
+        rim.color = NSColor(hex: 0xBFD8FF)
+        let rimNode = SCNNode()
+        rimNode.light = rim
+        rimNode.eulerAngles = vec(-0.4, 2.6, 0)
+        scene.rootNode.addChildNode(rimNode)
+
+        let fill = SCNLight()
+        fill.type = .directional
+        fill.intensity = 220
+        let fillNode = SCNNode()
+        fillNode.light = fill
+        fillNode.eulerAngles = vec(-0.2, 0.9, 0)
+        scene.rootNode.addChildNode(fillNode)
         return scene
     }
 

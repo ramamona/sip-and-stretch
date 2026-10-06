@@ -65,7 +65,7 @@ struct AvatarPane: View {
         } header: {
             Text("Your avatar")
         } footer: {
-            Text("When a reminder is due, your avatar walks along the bottom of the screen, waves, and the card appears above it. It never blocks clicks, and uses no CPU while standing still.")
+            Text("When a reminder is due, your avatar walks in from the bottom-right corner of the main screen, shows off its signature move, and the card appears above it. Finish the task and it celebrates and leaves happy; skip it and it sulks and storms off; ignore the preview card for about 20 seconds to watch it get impatient. It never blocks clicks and uses no CPU while standing still.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
@@ -346,7 +346,7 @@ struct AvatarPane: View {
         } header: {
             Text("Bring your own 3D model")
         } footer: {
-            Text("Use any character you made or have the rights to. It's scaled to fit and walks with a cheerful waddle. USDZ works best because textures are packed inside the file. Pick a voice for it below.")
+            Text("For a more realistic look than the built-in shapes, import a detailed model you made, bought or are licensed to use (for example a Kratos or Hulk USDZ). It's scaled to fit and walks with a waddle; animations stored in the file play as they are. USDZ works best because textures are packed inside. Pick a voice for it below, such as Kratos.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
@@ -394,6 +394,11 @@ struct AvatarPane: View {
             if avatar.character.voice != nil {
                 Toggle("Talk like \(avatar.character.displayName)", isOn: $model.settings.avatar.matchVoiceToCharacter)
             }
+            if avatar.character.voice == nil {
+                Picker("Voice", selection: $model.settings.personality) {
+                    ForEach(Personality.allCases) { Text("\($0.emoji)  \($0.displayName)").tag($0) }
+                }
+            }
             HStack(alignment: .top, spacing: 10) {
                 Text(voice.emoji).font(.system(size: 22))
                 VStack(alignment: .leading, spacing: 4) {
@@ -417,7 +422,7 @@ struct AvatarPane: View {
         if avatar.character.voice != nil, avatar.matchVoiceToCharacter {
             return "Reminders, cheers and read-aloud speech all use \(avatar.character.displayName)'s own voice."
         }
-        return "Using the personality from Personality & Look (\(model.settings.personality.displayName)). Pick any of them there, including the Kratos, Kung Fu Panda and Monkey King voices."
+        return "Using the personality \(model.settings.personality.displayName), the same one as in Personality & Look. Give a custom person or your own 3D model the voice of Kratos, Kung Fu Panda, the Monkey King or Hulk by picking it here."
     }
 
     // MARK: Walking
@@ -433,8 +438,9 @@ struct AvatarPane: View {
                 ForEach(WalkSpeed.allCases) { Text($0.displayName).tag($0) }
             }
             .pickerStyle(.segmented)
-            Picker("Walks in", selection: $model.settings.avatar.entry) {
-                ForEach(WalkEntry.allCases) { Text($0.displayName).tag($0) }
+            Picker("Gets annoyed after", selection: $model.settings.avatar.patienceMinutes) {
+                Text("Never").tag(0)
+                ForEach([2, 5, 10, 15, 30], id: \.self) { Text("\($0) minutes").tag($0) }
             }
             Picker("Animation", selection: $model.settings.avatar.quality) {
                 ForEach(AvatarQuality.allCases) { Text($0.displayName).tag($0) }
@@ -442,7 +448,7 @@ struct AvatarPane: View {
         } header: {
             Text("Walking")
         } footer: {
-            Text("The avatar stops where your nudge card appears (set in General). Lower frame rates use less CPU and battery; with Reduce Motion on, it just fades in instead of walking.")
+            Text("The avatar walks in from the bottom-right corner of your main screen only, even with several displays. If you ignore it, it gets more and more annoyed, then storms off after the time above. Lower frame rates use less CPU and battery; with Reduce Motion on, it fades in instead of walking.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }

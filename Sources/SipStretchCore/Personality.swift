@@ -5,7 +5,7 @@ import Foundation
 public enum Personality: String, Codable, CaseIterable, Identifiable, Sendable {
     case cheerful, sassy, pirate, zen, dramatic, robot, grandma, gymBro
     // Character voices: original lines written in the spirit of each character (no quotes from the source material).
-    case kratos, kungFuPanda, wukong
+    case kratos, kungFuPanda, wukong, hulk
 
     public var id: String { rawValue }
 
@@ -22,6 +22,7 @@ public enum Personality: String, Codable, CaseIterable, Identifiable, Sendable {
         case .kratos: "Kratos"
         case .kungFuPanda: "Kung Fu Panda"
         case .wukong: "Monkey King"
+        case .hulk: "Hulk"
         }
     }
 
@@ -38,6 +39,7 @@ public enum Personality: String, Codable, CaseIterable, Identifiable, Sendable {
         case .kratos: "🪓"
         case .kungFuPanda: "🐼"
         case .wukong: "🐵"
+        case .hulk: "💚"
         }
     }
 
@@ -54,6 +56,7 @@ public enum Personality: String, Codable, CaseIterable, Identifiable, Sendable {
         case .kratos: "Few words. Gruff. Hydration is a duty."
         case .kungFuPanda: "Dumplings, destiny and a lot of enthusiasm."
         case .wukong: "Mischievous, mighty, bored of heaven's rules."
+        case .hulk: "Short sentences. Big feelings. HYDRATE."
         }
     }
 
@@ -63,6 +66,7 @@ public enum Personality: String, Codable, CaseIterable, Identifiable, Sendable {
         case .kratos: 0.55
         case .kungFuPanda: 1.1
         case .wukong: 1.3
+        case .hulk: 0.45
         default: 1
         }
     }
@@ -73,6 +77,7 @@ public enum Personality: String, Codable, CaseIterable, Identifiable, Sendable {
         case .kratos: 0.42
         case .kungFuPanda: 0.52
         case .wukong: 0.55
+        case .hulk: 0.4
         default: 0.5
         }
     }

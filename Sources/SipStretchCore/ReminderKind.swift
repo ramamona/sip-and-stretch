@@ -85,6 +85,11 @@ extension ReminderKind {
         case (.wukong, .eyes): ["Golden eyes up!", "Gaze far away!", "Eyes up, friend!"]
         case (.wukong, .walk): ["Wander, friend!", "Cloud-walk time!", "Journey west!"]
 
+        case (.hulk, .water): ["HULK SAY DRINK!", "WATER NOW!", "SMASH THIRST!", "GULP GULP!"]
+        case (.hulk, .stretch): ["HULK STRETCH!", "UNBEND, PUNY!", "SMASH STIFFNESS!"]
+        case (.hulk, .eyes): ["LOOK FAR, PUNY!", "EYES AWAY!", "HULK EYE BREAK!"]
+        case (.hulk, .walk): ["HULK WALK!", "STOMP TIME!", "LEAVE CHAIR!"]
+
         default: cardTitles
         }
     }

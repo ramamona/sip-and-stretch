@@ -16,7 +16,7 @@ import Testing
         var settings = AppSettings()
         settings.personality = .pirate
         let voices: [AvatarCharacter: Personality] = [
-            .kratos: .kratos, .kungFuPanda: .kungFuPanda, .wukong: .wukong, .robot: .robot,
+            .kratos: .kratos, .kungFuPanda: .kungFuPanda, .wukong: .wukong, .hulk: .hulk, .robot: .robot,
         ]
         for (character, voice) in voices {
             settings.avatar.character = character
@@ -34,10 +34,11 @@ import Testing
     }
 
     @Test func characterVoicesAreDistinctFromEachOther() {
-        let openers = [Personality.kratos, .kungFuPanda, .wukong].map { Set($0.pack.waterReminders) }
+        let openers = [Personality.kratos, .kungFuPanda, .wukong, .hulk].map { Set($0.pack.waterReminders) }
         #expect(openers[0].isDisjoint(with: openers[1]))
         #expect(openers[1].isDisjoint(with: openers[2]))
         #expect(openers[0].isDisjoint(with: openers[2]))
+        #expect(openers[3].isDisjoint(with: openers[0]) && openers[3].isDisjoint(with: openers[1]) && openers[3].isDisjoint(with: openers[2]))
         #expect(Personality.kratos.speechPitch < Personality.wukong.speechPitch)
     }
 
@@ -115,7 +116,7 @@ import Testing
         for character in AvatarCharacter.allCases {
             #expect(!character.displayName.isEmpty && !character.emoji.isEmpty && !character.tagline.isEmpty)
         }
-        #expect(AvatarCharacter.allCases.filter(\.isFanMade).count == 3)
+        #expect(AvatarCharacter.allCases.filter(\.isFanMade).count == 4)
     }
 
     @Test(arguments: Personality.allCases)
@@ -128,11 +129,41 @@ import Testing
     }
 
     @Test func charactersHaveTheirOwnTitles() {
-        for personality in [Personality.kratos, .kungFuPanda, .wukong] {
+        for personality in [Personality.kratos, .kungFuPanda, .wukong, .hulk] {
             for kind in ReminderKind.allCases {
                 #expect(kind.cardTitles(for: personality) != kind.cardTitles)
             }
         }
         #expect(ReminderKind.water.cardTitles(for: .cheerful) == ReminderKind.water.cardTitles)
+    }
+
+    @Test(arguments: Personality.allCases)
+    func everyoneHasReactionsToBeingIgnored(_ personality: Personality) {
+        for reaction in AvatarReaction.allCases {
+            let lines = personality.reactionLines(reaction)
+            #expect(lines.count >= 3)
+            #expect(lines.allSatisfy { !$0.isEmpty && $0.count <= 110 && !$0.contains("{left}") })
+        }
+        #expect(personality.reactionTitle(.skipped).count <= 21 && personality.reactionTitle(.timedOut).count <= 21)
+    }
+
+    @Test func charactersReactInTheirOwnWords() {
+        for personality in [Personality.kratos, .kungFuPanda, .wukong, .hulk] {
+            for reaction in AvatarReaction.allCases {
+                #expect(personality.reactionLines(reaction) != Personality.cheerful.reactionLines(reaction))
+            }
+        }
+    }
+
+    @Test func patienceTimelineGetsAngrierAndEnds() {
+        var avatar = AvatarSettings()
+        let timeline = avatar.patienceTimeline()
+        #expect(timeline.timeout == 600)
+        #expect(timeline.grumbles.count == 3)
+        #expect(timeline.grumbles == timeline.grumbles.sorted())
+        #expect(timeline.grumbles.allSatisfy { $0 > 0 && $0 < 600 })
+        #expect(avatar.patienceTimeline(speedUp: 30).timeout == 20)
+        avatar.patienceMinutes = 0
+        #expect(avatar.patienceTimeline() == PatienceTimeline(grumbles: [], timeout: nil))
     }
 }
