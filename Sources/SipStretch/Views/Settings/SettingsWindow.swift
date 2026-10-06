@@ -47,7 +47,8 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
     static let shared = SettingsWindowController()
 
     let navigation = SettingsNavigation()
-    private var window: NSWindow?
+    /// The Settings window while it's open (nil once closed).
+    private(set) var window: NSWindow?
 
     func show(_ pane: SettingsPane? = nil) {
         if let pane { navigation.selection = pane }

@@ -273,8 +273,22 @@ struct AvatarPane: View {
         panel.allowedContentTypes = [.image]
         panel.allowsMultipleSelection = false
         panel.canChooseDirectories = false
-        guard panel.runModal() == .OK, let url = panel.url else { return }
-        applyPhoto(from: url)
+        present(panel) { url in applyPhoto(from: url) }
+    }
+
+    /// Shows an open panel as a sheet on the Settings window. (`runModal()` from inside a SwiftUI button
+    /// can open the panel out of sight and leave the app frozen until Esc.)
+    private func present(_ panel: NSOpenPanel, then handle: @escaping (URL) -> Void) {
+        NSApp.activate()
+        let finished: (NSApplication.ModalResponse) -> Void = { response in
+            guard response == .OK, let url = panel.url else { return }
+            Task { @MainActor in handle(url) }
+        }
+        if let window = SettingsWindowController.shared.window {
+            panel.beginSheetModal(for: window, completionHandler: finished)
+        } else {
+            panel.begin(completionHandler: finished)
+        }
     }
 
     private func handleDrop(_ providers: [NSItemProvider]) -> Bool {
@@ -388,10 +402,14 @@ struct AvatarPane: View {
     private func importModel(for character: AvatarCharacter) {
         let panel = NSOpenPanel()
         panel.title = "Choose a 3D model for \(character.displayName)"
-        panel.allowedContentTypes = AvatarStorage.modelExtensions.compactMap { UTType(filenameExtension: $0) }
+        let types: [UTType] = [.usdz, .threeDContent, .sceneKitScene] + AvatarStorage.modelExtensions.compactMap { UTType(filenameExtension: $0) }
+        panel.allowedContentTypes = types
         panel.allowsMultipleSelection = false
         panel.canChooseDirectories = false
-        guard panel.runModal() == .OK, let url = panel.url else { return }
+        present(panel) { url in finishImport(of: url, for: character) }
+    }
+
+    private func finishImport(of url: URL, for character: AvatarCharacter) {
         do {
             let fileName = try AvatarStorage.importModel(from: url, for: character)
             guard AvatarRig.loadModelNode(url: AvatarStorage.modelURL(fileName)) != nil else {
