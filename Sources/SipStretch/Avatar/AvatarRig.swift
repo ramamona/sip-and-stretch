@@ -11,6 +11,20 @@ import SipStretchCore
 
 func vec(_ x: CGFloat, _ y: CGFloat, _ z: CGFloat) -> SCNVector3 { SCNVector3(x: x, y: y, z: z) }
 
+/// Easing curves for `squashAction`.
+func easeOutCurve(_ t: CGFloat) -> CGFloat { 1 - (1 - t) * (1 - t) }
+func smoothCurve(_ t: CGFloat) -> CGFloat { t * t * (3 - 2 * t) }
+
+/// Squash and stretch: scales a node non-uniformly from one size to another. (SceneKit's own scale
+/// actions only scale uniformly.) Each call states where it starts, so it stays correct in loops.
+func squashAction(from: (CGFloat, CGFloat, CGFloat), to: (CGFloat, CGFloat, CGFloat), duration: TimeInterval, curve: @escaping (CGFloat) -> CGFloat = { $0 }) -> SCNAction {
+    SCNAction.customAction(duration: duration) { node, elapsed in
+        let progress = duration > 0 ? min(1, max(0, elapsed / CGFloat(duration))) : 1
+        let t = curve(progress)
+        node.scale = vec(from.0 + (to.0 - from.0) * t, from.1 + (to.1 - from.1) * t, from.2 + (to.2 - from.2) * t)
+    }
+}
+
 private func material(_ hex: UInt32, glow: CGFloat = 0) -> SCNMaterial {
     let result = SCNMaterial()
     result.diffuse.contents = NSColor(hex: hex)
@@ -343,10 +357,8 @@ final class AvatarRig {
             right.timingMode = .easeInEaseOut
             bobNode.runAction(.repeatForever(.sequence([left, right])), forKey: "sway")
 
-            let stretchUp = SCNAction.scaleX(to: 0.97, y: 1.05, z: 0.97, duration: half / 2)
-            let squashDown = SCNAction.scaleX(to: 1.04, y: 0.95, z: 1.04, duration: half / 2)
-            stretchUp.timingMode = .easeOut
-            squashDown.timingMode = .easeIn
+            let stretchUp = squashAction(from: (1.04, 0.95, 1.04), to: (0.97, 1.05, 0.97), duration: half / 2, curve: easeOutCurve)
+            let squashDown = squashAction(from: (0.97, 1.05, 0.97), to: (1.04, 0.95, 1.04), duration: half / 2)
             bobNode.runAction(.repeatForever(.sequence([stretchUp, squashDown])), forKey: "squash")
         } else if sway > 0 {
             let left = SCNAction.rotateTo(x: 0, y: 0, z: sway, duration: half, usesShortestUnitArc: true)
@@ -370,10 +382,8 @@ final class AvatarRig {
     /// Standing around, alive: slow breathing, a shift of weight and a look to either side.
     /// Cheap (a few actions), but it keeps the scene rendering, so the walker draws it at a low frame rate.
     func startIdleLife() {
-        let breatheIn = SCNAction.scaleX(to: 1.012, y: 1.022, z: 1.012, duration: 1.5)
-        let breatheOut = SCNAction.scaleX(to: 0.994, y: 0.988, z: 0.994, duration: 1.7)
-        breatheIn.timingMode = .easeInEaseOut
-        breatheOut.timingMode = .easeInEaseOut
+        let breatheIn = squashAction(from: (0.994, 0.988, 0.994), to: (1.012, 1.022, 1.012), duration: 1.5, curve: smoothCurve)
+        let breatheOut = squashAction(from: (1.012, 1.022, 1.012), to: (0.994, 0.988, 0.994), duration: 1.7, curve: smoothCurve)
         bobNode.runAction(.repeatForever(.sequence([breatheIn, breatheOut])), forKey: "idle-breathe")
 
         let shiftLeft = SCNAction.rotateTo(x: 0.02, y: 0.07, z: 0.025, duration: 2.2)

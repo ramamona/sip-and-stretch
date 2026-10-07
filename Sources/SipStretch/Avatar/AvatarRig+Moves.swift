@@ -400,21 +400,17 @@ extension AvatarRig {
 
     /// A hop that stretches on the way up and squashes on landing (cartoon weight).
     private func bouncyHop(_ height: CGFloat, _ time: TimeInterval) -> (jump: SCNAction, squash: SCNAction) {
-        let stretch = SCNAction.scaleX(to: 0.93, y: 1.1, z: 0.93, duration: time * 0.45)
-        let land = SCNAction.scaleX(to: 1.14, y: 0.85, z: 1.14, duration: time * 0.12)
-        let settle = SCNAction.scaleX(to: 1, y: 1, z: 1, duration: time * 0.43)
-        stretch.timingMode = .easeOut
-        settle.timingMode = .easeOut
+        let stretch = squashAction(from: (1, 1, 1), to: (0.93, 1.1, 0.93), duration: time * 0.45, curve: easeOutCurve)
+        let land = squashAction(from: (0.93, 1.1, 0.93), to: (1.14, 0.85, 1.14), duration: time * 0.12)
+        let settle = squashAction(from: (1.14, 0.85, 1.14), to: (1, 1, 1), duration: time * 0.43, curve: easeOutCurve)
         return (hop(height, time), SCNAction.sequence([stretch, land, settle]))
     }
 
     /// Squash and stretch for an overhead slam: stretch up while winding up, flatten on impact, spring back.
     private func slamSquash(windUp: TimeInterval, hold: TimeInterval, impact: TimeInterval, recover: TimeInterval) -> SCNAction {
-        let up = SCNAction.scaleX(to: 0.94, y: 1.1, z: 0.94, duration: windUp)
-        let flat = SCNAction.scaleX(to: 1.16, y: 0.84, z: 1.16, duration: impact)
-        let back = SCNAction.scaleX(to: 1, y: 1, z: 1, duration: recover)
-        up.timingMode = .easeOut
-        back.timingMode = .easeOut
+        let up = squashAction(from: (1, 1, 1), to: (0.94, 1.1, 0.94), duration: windUp, curve: easeOutCurve)
+        let flat = squashAction(from: (0.94, 1.1, 0.94), to: (1.16, 0.84, 1.16), duration: impact)
+        let back = squashAction(from: (1.16, 0.84, 1.16), to: (1, 1, 1), duration: recover, curve: easeOutCurve)
         return SCNAction.sequence([up, SCNAction.wait(duration: hold), flat, back])
     }
 
