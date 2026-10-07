@@ -298,12 +298,20 @@ extension AvatarRig {
 
     /// Flushes red, shakes the head, stomps, and (when `turnAway`) turns their back on you.
     private func angry(turnAway: Bool) -> TimeInterval {
-        setTint(NSColor(hex: 0xFF3B30), amount: 0.55)
+        setTint(NSColor(hex: 0xFF3B30), amount: min(0.9, 0.7 + 0.2 * rage))
+        // A roar: swell up, then a shockwave and a jolt, every time (harder when it's already furious).
+        bobNode.runAction(slamSquash(windUp: 0.25, hold: 0.1, impact: 0.12, recover: 0.4), forKey: "squash")
+        shockwave(after: 0.35)
+        quake(after: 0.35)
+        if rage > 0.4 {
+            shockwave(after: 0.9)
+            quake(after: 0.9)
+        }
         if isModel { return modelAngry(turnAway: turnAway) }
         var right: [SCNAction] = [turn(0.1, 0, 0.9, 0.2), wait(1.8), restRight()]
         let left: [SCNAction] = [turn(0.1, 0, -0.9, 0.2), wait(1.8), restLeft()]
         var extra: [(SCNNode, [SCNAction])] = []
-        var bob: [SCNAction] = [wait(0.1), hop(0.04, 0.2), hop(0.04, 0.2), hop(0.04, 0.2), hop(0.04, 0.2)]
+        var bob: [SCNAction] = [wait(0.1), hop(0.08, 0.2), hop(0.08, 0.2), hop(0.08, 0.2), hop(0.08, 0.2)]
 
         switch character {
         case .kratos, .wukong:
@@ -337,7 +345,7 @@ extension AvatarRig {
             (rightArm, right),
             (leftArm, left),
             (bobNode, bob),
-            (head, [turn(0, 0.6, 0, 0.12), turn(0, -0.6, 0, 0.12), turn(0, 0.6, 0, 0.12), turn(0, -0.6, 0, 0.12), turn(0, 0, 0, 0.12)]),
+            (head, [turn(0, 0.8, 0, 0.1), turn(0, -0.8, 0, 0.1), turn(0, 0.8, 0, 0.1), turn(0, -0.8, 0, 0.1), turn(0, 0.8, 0, 0.1), turn(0, -0.8, 0, 0.1), turn(0, 0, 0, 0.1)]),
         ]
         tracks += extra
         play(tracks)
@@ -516,7 +524,7 @@ extension AvatarRig {
     }
 
     fileprivate func modelAngry(turnAway: Bool) -> TimeInterval {
-        var body: [SCNAction] = [SCNAction.wait(duration: 0.1), hop(0.04, 0.2), hop(0.04, 0.2), hop(0.04, 0.2), hop(0.04, 0.2)]
+        var body: [SCNAction] = [SCNAction.wait(duration: 0.1), hop(0.08, 0.2), hop(0.08, 0.2), hop(0.08, 0.2), hop(0.08, 0.2)]
         switch modelStyle {
         case .kratos, .hulk:
             body = [lean(-0.3, 0.3), lean(0.55, 0.1, .easeIn), SCNAction.wait(duration: 0.25), lean(-0.3, 0.3), lean(0.55, 0.1, .easeIn), SCNAction.wait(duration: 0.4), lean(0, 0.3)]
@@ -550,5 +558,13 @@ extension AvatarRig {
         body += tap
         playBody([(bobNode, body), (yawNode, yaw)])
         return 2.0
+    }
+}
+
+extension AvatarRig {
+    /// Puffs up a bit more every time it's skipped, up to a limit (the window is only so big).
+    func swell() {
+        guard root.scale.x < 1.5 else { return }
+        root.runAction(SCNAction.scale(by: 1.2, duration: 0.4))
     }
 }

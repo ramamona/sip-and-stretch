@@ -439,6 +439,36 @@ extension Personality {
             "Puny human ignore Hulk! HULK LEAVE!",
         ]
 
+        case (.kratos, .enraged): [
+            "ENOUGH. I will not be ignored again.",
+            "You test me, {name}. Every skip is a debt.",
+            "Again?! My patience is a thin chain.",
+            "Do it. Now. Before I lose my temper.",
+        ]
+        case (.kungFuPanda, .enraged): [
+            "That's it! I'm getting BIGGER and you're getting reminders!",
+            "Skip, skip, skip! I'm a panda, not a doormat!",
+            "I'm warning you: dumpling-powered anger! 🥟",
+            "Okay, now I'm actually mad. Grr! 🐼",
+        ]
+        case (.wukong, .enraged): [
+            "INSOLENT mortal! My staff grows with my wrath!",
+            "Skip me once more and see my seventy-two transformations!",
+            "You test the Monkey King's patience, {name}! 🐒",
+            "Hmph! Bigger and angrier!",
+        ]
+        case (.hulk, .enraged): [
+            "HULK GROWING! HULK ANGRY! DO THE THING!",
+            "SKIP AGAIN? HULK GET BIGGER!",
+            "HULK SAID DO IT! HULK NOT ASK TWICE!",
+            "{name}! HULK SMASH PATIENCE!",
+        ]
+        case (_, .enraged): [
+            "Seriously?! Again?!",
+            "I'm getting really annoyed, {name}. 😤",
+            "Every skip makes me bigger and angrier. Just saying.",
+            "Do the thing. DO IT.",
+        ]
         case (_, .skipped): [
             "Skipped? Okay… I'll just stand here. 😶",
             "Aww. That one counted for nothing.",
@@ -469,6 +499,11 @@ extension Personality {
     /// A short headline for the card when a character reacts (skipped or timed out).
     public func reactionTitle(_ reaction: AvatarReaction) -> String {
         switch (self, reaction) {
+        case (.kratos, .enraged): "ENOUGH!"
+        case (.kungFuPanda, .enraged): "That's it!"
+        case (.wukong, .enraged): "INSOLENCE!"
+        case (.hulk, .enraged): "HULK SMASH!"
+        case (_, .enraged): "Seriously?!"
         case (.kratos, .timedOut): "Enough."
         case (.kratos, _): "Disappointing."
         case (.kungFuPanda, .timedOut): "I waited..."

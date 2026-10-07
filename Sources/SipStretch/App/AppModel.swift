@@ -40,6 +40,8 @@ final class AppModel {
     /// Refreshed every tick; views read it so countdowns stay live.
     private(set) var now = Date()
     private(set) var isAway = false
+    /// Skips in a row. Each makes the walking avatar bigger and angrier; doing a reminder calms it down.
+    private(set) var annoyance = 0
     /// Camera or microphone in use (and the user wants reminders held during calls).
     private(set) var inMeeting = false
     private(set) var notificationStatus: NotificationService.Status = .unknown
@@ -222,10 +224,15 @@ final class AppModel {
 
     // MARK: Actions
 
+    func annoy() { annoyance = min(annoyance + 1, 8) }
+
+    func calmDown() { annoyance = 0 }
+
     /// Logs a glass and returns the line to celebrate with. Logged anywhere but the water card
     /// itself (popover, URL, notification), a waiting water card is answered too.
     @discardableResult
     func drink(fromCard: Bool = false) -> String {
+        calmDown()
         if !fromCard { nudges.dismiss(.water) }
         let levelBefore = stats.level
         let wasBelowGoal = today.water < settings.dailyWaterGoal
@@ -248,6 +255,7 @@ final class AppModel {
     @discardableResult
     func completeBreak(_ kind: ReminderKind) -> String {
         guard kind != .water else { return drink(fromCard: true) }
+        calmDown()
         let levelBefore = stats.level
         stats.logBreak(kind, at: Date(), schedule: settings.schedule)
         clock.restart(kind, now: Date(), settings: settings)

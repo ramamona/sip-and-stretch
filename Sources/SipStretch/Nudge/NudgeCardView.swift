@@ -463,6 +463,7 @@ struct NudgeCardView: View {
     }
 
     private func finish(_ kind: ReminderKind) {
+        model.calmDown()
         let message = nudge.isPreview ? "Preview complete. The real thing counts for XP! ✨" : model.completeBreak(kind)
         startCelebration(message: message, xp: kind.xp)
     }
@@ -483,11 +484,12 @@ struct NudgeCardView: View {
     /// Skipping (or ignoring) a reminder. With a walking character standing there, it sulks first.
     private func skip(_ kind: ReminderKind, timedOut: Bool = false) {
         if !nudge.isPreview { model.skip(kind) }
+        model.annoy() // previews too, so you can watch it escalate
         guard model.nudges.walker.isStanding else {
             close()
             return
         }
-        let reaction: AvatarReaction = timedOut ? .timedOut : .skipped
+        let reaction: AvatarReaction = timedOut ? .timedOut : model.annoyance >= 2 ? .enraged : .skipped
         model.nudges.walker.sulk()
         phase = .reaction(title: model.reactionTitle(reaction), line: model.reactionLine(reaction))
     }

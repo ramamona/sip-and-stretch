@@ -368,6 +368,8 @@ public enum AvatarReaction: String, CaseIterable, Sendable {
     case impatient
     /// Waited too long and gave up.
     case timedOut
+    /// Skipped again and again without doing it in between.
+    case enraged
 }
 
 /// When an unanswered character gets restless and when it finally storms off.
@@ -385,4 +387,12 @@ extension AvatarSettings {
         let total = TimeInterval(patienceMinutes * 60) / max(1, speedUp)
         return PatienceTimeline(grumbles: [0.15, 0.4, 0.7].map { $0 * total }, timeout: total)
     }
+}
+
+extension AvatarSettings {
+    /// How much bigger the avatar shows up after `annoyance` skips in a row: 20% per skip, up to 1.8x.
+    public static func growth(forAnnoyance annoyance: Int) -> Double { min(1.8, 1 + 0.2 * Double(max(0, annoyance))) }
+
+    /// How furious it is, 0 (calm) to 1 (at its limit after four skips).
+    public static func rage(forAnnoyance annoyance: Int) -> Double { min(1, Double(max(0, annoyance)) / 4) }
 }

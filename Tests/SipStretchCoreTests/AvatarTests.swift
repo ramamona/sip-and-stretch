@@ -208,4 +208,11 @@ import Testing
         #expect(AppSettings.decode(from: try JSONEncoder().encode(settings)).avatar.idle == .still)
         #expect(AvatarIdle.allCases.allSatisfy { !$0.displayName.isEmpty })
     }
+
+    @Test func skippingGrowsTheAvatarUpToACap() {
+        let growth = (0...8).map { AvatarSettings.growth(forAnnoyance: $0) }
+        #expect(growth[0] == 1 && growth == growth.sorted() && growth.last == 1.8)
+        #expect(AvatarSettings.growth(forAnnoyance: -3) == 1)
+        #expect(AvatarSettings.rage(forAnnoyance: 0) == 0 && AvatarSettings.rage(forAnnoyance: 9) == 1)
+    }
 }

@@ -93,6 +93,7 @@ It's free, open source, 100% local, and small enough to read in an afternoon.
   | 🧩 | **Your own 3D model** | Spins and hops | Cheers | Sulks |
 
 - **It has feelings.** Finish the task and it celebrates and **leaves happy** (bouncing out of the screen). Skip or dismiss it and it flushes red, sulks with a line in its own voice, and **stomps off angry**. Ignore it and it grows steadily more impatient (foot tapping, arms crossed, stomping), then **storms off after 10 minutes** (configurable, or never).
+- **It remembers.** Every skip, swipe-away or timeout in a row makes it show up bigger and redder (up to 1.8x), scowling and spitting furious lines; do a reminder and it calms right down.
 - **Every character talks differently.** Kratos growls, the panda gets excited about dumplings, the Monkey King brags, Hulk speaks in capital letters. Reminders, cheers, snoozes, greetings, card titles, impatient and sulky lines, and read-aloud speech (with a matching pitch and pace) all use the character's own voice. Prefer your usual personality? Turn off **Talk like the character**.
 - **Make a custom person:** choose **gender** (male, female, non-binary), skin tone, hair style and color, outfit, outfit colors and accessories (glasses, sunglasses, cap, headphones, scarf).
 - **Design an avatar from a photo:** choose or drop a photo and the custom person gets **your face** (found with on-device face detection), plus a matching skin tone and hair color you can still tweak. Photos are analysed on your Mac and never uploaded; only a small round crop of the face is kept.

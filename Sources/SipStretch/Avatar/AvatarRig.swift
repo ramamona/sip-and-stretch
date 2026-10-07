@@ -139,6 +139,8 @@ final class AvatarRig {
     var armSplay: CGFloat = 0.1
     /// Whether the right arm may wave (false when the hand is holding something big).
     var canWave = true
+    /// 0 (calm) to 1 (furious after repeated skips): turns the angry moves up.
+    var rage: CGFloat = 0
 
     private(set) var isWalking = false
 

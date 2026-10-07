@@ -44,6 +44,8 @@ final class AvatarWalker {
     private var moveTimer: Timer?
     private var pauseTask: Task<Void, Never>?
     private var stretching = false
+    /// Arrived already irritated by earlier skips: greets you with a scowl instead of a show.
+    private var annoyed = false
     private var outcome = WalkerOutcome.pleased
     /// Bumped whenever a walk starts or ends so callbacks from an older walk can't act on a newer one.
     private var generation = 0
@@ -54,7 +56,7 @@ final class AvatarWalker {
 
     /// Walks in from the right edge of `screen` (the main display) to its bottom-right corner, then does its
     /// signature move. `arrived` is called once it stands there, or right away if it's already standing.
-    func walkIn(app: AppSettings, screen: NSScreen, arrived: @escaping (WalkerStand) -> Void) {
+    func walkIn(app: AppSettings, annoyance: Int, screen: NSScreen, arrived: @escaping (WalkerStand) -> Void) {
         if phase == .standing, let standingPanel = panel {
             outcome = .pleased
             stretching = false
@@ -72,7 +74,10 @@ final class AvatarWalker {
 
         let look = AvatarLook(app: app)
         let newRig = AvatarStage.makeRig(look: look)
-        let side = (Self.baseWindowSide * CGFloat(settings.size.scale)).rounded()
+        // Every skip in a row makes it bigger (a bigger window) and redder.
+        self.annoyed = annoyance > 0
+        let growth = CGFloat(AvatarSettings.growth(forAnnoyance: annoyance))
+        let side = (Self.baseWindowSide * CGFloat(settings.size.scale) * growth).rounded()
         pointsPerMeter = side / AvatarStage.visibleHeight
 
         let visible = screen.visibleFrame
@@ -84,6 +89,8 @@ final class AvatarWalker {
         let newPanel = NudgePanel(size: CGSize(width: side, height: side))
         newPanel.ignoresMouseEvents = true
         newPanel.contentView = newView
+        newRig.rage = CGFloat(AvatarSettings.rage(forAnnoyance: annoyance))
+        if annoyance > 0 { newRig.setTint(NSColor(hex: 0xFF3B30), amount: min(0.6, 0.15 * CGFloat(annoyance))) }
         self.rig = newRig
         self.view = newView
         self.panel = newPanel
@@ -120,7 +127,7 @@ final class AvatarWalker {
         if reduceMotion {
             scheduleIdlePause(after: 0.5)
         } else {
-            perform(.signature)
+            perform(annoyed ? .grumble(3) : .signature)
         }
         arrived(stand(for: panel.frame))
     }
@@ -150,6 +157,7 @@ final class AvatarWalker {
         outcome = .displeased
         stretching = false
         perform(.angry)
+        rig?.swell()
     }
 
     /// You pushed it back: a grumble, and it leaves a little put out.

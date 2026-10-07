@@ -107,7 +107,7 @@ final class NudgeController {
             return
         }
         walkingID = nudge.id
-        walker.walkIn(app: model.settings, screen: screen) { [weak self] stand in
+        walker.walkIn(app: model.settings, annoyance: model.annoyance, screen: screen) { [weak self] stand in
             guard let self, self.walkingID == nudge.id, self.current?.id == nudge.id else { return }
             self.walkingID = nil
             self.display(nudge, standing: stand, on: screen)
@@ -151,6 +151,7 @@ final class NudgeController {
         guard let model else { return }
         let swipe = CardSwipe()
         signals = CardSignals()
+        if stand != nil, model.annoyance >= 2 { signals.line = model.reactionLine(.enraged) }
         let card = NudgeCardView(nudge: nudge, swipe: swipe, signals: signals) { [weak self] in self?.close(nudge) }
             .environment(model)
         let hosting = ClickThroughHostingView(rootView: card)
