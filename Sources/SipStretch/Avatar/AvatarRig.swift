@@ -138,6 +138,17 @@ final class AvatarRig {
     private(set) var isModel = false
     /// Whose body language an imported model borrows (Kratos lunges, the panda spin-kicks…).
     private(set) var modelStyle = Personality.cheerful
+    /// Set when an imported model's skeleton was found: it is then posed joint by joint (see `SkeletonRig`)
+    /// instead of being moved as one block.
+    var skeleton: SkeletonRig?
+    var driver: PoseDriver?
+    var motionStyle = MotionStyle.standard
+    /// How long its legs are in scene metres, so strides can match the speed it travels at.
+    var legMeters: CGFloat = 0
+    var usesSkeleton: Bool { driver != nil }
+    /// Frame rate for the quiet standing-around animation: smooth enough for breathing to look right,
+    /// slow enough to cost almost nothing.
+    var idleFramesPerSecond: Int { usesSkeleton ? 20 : 12 }
     var tintBackup: [ObjectIdentifier: (contents: Any?, intensity: CGFloat)] = [:]
 
     /// Top of the character in metres (props and feathers included), for framing.
@@ -171,7 +182,7 @@ final class AvatarRig {
         }
         root.addChildNode(blob)
 
-        if let modelURL, !look.modelFileName.isEmpty, buildModel(url: modelURL, rotationDegrees: look.modelRotation, voice: look.voice) {
+        if let modelURL, !look.modelFileName.isEmpty, buildModel(url: modelURL, rotationDegrees: look.modelRotation, voice: look.voice, poseBody: look.poseBody) {
             isModel = true
             modelStyle = look.voice
         } else {
@@ -317,10 +328,17 @@ final class AvatarRig {
         yawNode.runAction(turn, forKey: "face")
     }
 
-    /// Starts the walk cycle. `cycle` is the time for two steps, in seconds.
-    func startWalking(cycle: TimeInterval, mood: WalkMood = .normal) {
+    /// Starts the walk cycle. `cycle` is the time for two steps, in seconds. `speed` (scene metres per second)
+    /// lets a skeleton-driven model pick the cadence and stride that keep its feet on the ground.
+    func startWalking(cycle: TimeInterval, mood: WalkMood = .normal, speed: CGFloat? = nil) {
         stopActivities(settle: true)
         isWalking = true
+        if let driver {
+            let gait = skeletalGait(speed: speed, mood: mood, fallbackCycle: cycle)
+            let feeling: GaitMood = mood == .happy ? .happy : mood == .angry ? .angry : .normal
+            driver.setBase(.walk(cycle: gait.cycle, mood: feeling, stride: gait.stride))
+            return
+        }
         let half = max(0.2, cycle / 2)
 
         func swing(_ node: SCNNode, amplitude: CGFloat, positiveFirst: Bool, z: CGFloat) {
@@ -370,6 +388,18 @@ final class AvatarRig {
         startTailSway(period: cycle)
     }
 
+    /// A walk that matches how fast the avatar travels: longer legs take longer steps, and the faster it
+    /// goes the quicker it steps, so the feet don't skate across the ground.
+    private func skeletalGait(speed: CGFloat?, mood: WalkMood, fallbackCycle: TimeInterval) -> (cycle: Double, stride: Double?) {
+        guard let speed, speed > 0.05, legMeters > 0.05 else { return (fallbackCycle, nil) }
+        let legs = Double(legMeters)
+        let step = legs * (mood == .angry ? 0.62 : mood == .happy ? 0.82 : 0.74)
+        let cycle = min(1.3, max(0.55, 2 * step / Double(speed)))
+        let reach = Double(speed) * cycle / 2
+        let stride = asin(min(0.92, reach / (2 * legs)))
+        return (cycle, min(0.5, max(0.15, stride)))
+    }
+
     private func startTailSway(period: TimeInterval) {
         guard let tail else { return }
         let a = SCNAction.rotateTo(x: 0, y: 0, z: 0.35, duration: period / 2, usesShortestUnitArc: true)
@@ -382,6 +412,10 @@ final class AvatarRig {
     /// Standing around, alive: slow breathing, a shift of weight and a look to either side.
     /// Cheap (a few actions), but it keeps the scene rendering, so the walker draws it at a low frame rate.
     func startIdleLife() {
+        if let driver {
+            driver.setBase(.idle)
+            return
+        }
         let breatheIn = squashAction(from: (0.994, 0.988, 0.994), to: (1.012, 1.022, 1.012), duration: 1.5, curve: smoothCurve)
         let breatheOut = squashAction(from: (1.012, 1.022, 1.012), to: (0.994, 0.988, 0.994), duration: 1.7, curve: smoothCurve)
         bobNode.runAction(.repeatForever(.sequence([breatheIn, breatheOut])), forKey: "idle-breathe")
@@ -402,6 +436,15 @@ final class AvatarRig {
     /// Stops whatever is playing and eases back to the standing pose.
     func stopActivities(settle: Bool = false) {
         isWalking = false
+        if let driver {
+            driver.stopGesture()
+            driver.setBase(.idle)
+            yawNode.removeAction(forKey: "move")
+            root.removeAction(forKey: "quake")
+            bobNode.removeAllActions()
+            if settle { applyRestPose() }
+            return
+        }
         yawNode.removeAction(forKey: "move")
         root.removeAction(forKey: "quake")
         for node in [leftLeg, rightLeg, leftArm, rightArm, bobNode, tail, head, prop, leftProp].compactMap({ $0 }) { node.removeAllActions() }
@@ -476,6 +519,10 @@ final class AvatarRig {
     /// Slow arms-up-and-down stretching, until `stopActivities` is called.
     func startStretching() {
         stopActivities(settle: true)
+        if let driver {
+            driver.setBase(.stretch)
+            return
+        }
         let reach: CGFloat = 2.9
         func lift(_ node: SCNNode, side: CGFloat) {
             let up = SCNAction.rotateTo(x: 0, y: 0, z: side * reach, duration: 1.1, usesShortestUnitArc: true)

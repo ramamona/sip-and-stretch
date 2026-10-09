@@ -58,6 +58,7 @@ import Testing
         settings.avatar.setModel(ModelSlot(character: .kratos, fileName: "model-kratos.usdz", displayName: "Kratos"), for: .kratos)
         settings.avatar.setModel(ModelSlot(character: .model, fileName: "model-model.usdz", displayName: "Hero"), for: .model)
         settings.avatar.setModelRotation(180, for: .kratos)
+        settings.avatar.poseModelBody = false
         let data = try JSONEncoder().encode(settings)
         #expect(AppSettings.decode(from: data) == settings)
     }
@@ -77,6 +78,7 @@ import Testing
         #expect(settings.avatar.speed == .slow)
         #expect(settings.avatar.accessories == [.cap])
         #expect(settings.avatar.size == .medium)
+        #expect(settings.avatar.poseModelBody, "imported models get real joint movement unless turned off")
         #expect(settings.avatar.walkOnScreen)
     }
 

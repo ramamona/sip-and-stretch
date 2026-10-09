@@ -310,6 +310,9 @@ public struct AvatarSettings: Codable, Equatable, Sendable {
     /// `.model` character is the one for models that don't replace a built-in character.
     /// An array rather than a dictionary: `AppSettings.decode` only keeps keys it already knows.
     public var modelSlots: [ModelSlot] = []
+    /// Bend an imported model's arms, legs and spine like a person's, when it has a skeleton to bend.
+    /// Off: it moves as one block (leaning, hopping, spinning).
+    public var poseModelBody = true
 
     // Walking
     public var size: AvatarSize = .medium

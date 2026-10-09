@@ -135,6 +135,7 @@ struct AvatarPreviewView: NSViewRepresentable {
 
     private func load(into view: SCNView, coordinator: Coordinator) {
         let rig = AvatarStage.makeRig(look: look)
+        if rig.usesSkeleton { rig.startIdleLife() }
         rig.face(yaw: spinning ? 0.5 : 0.35, duration: 0)
         if spinning {
             rig.yawNode.runAction(.repeatForever(.rotateBy(x: 0, y: .pi * 2, z: 0, duration: 10)), forKey: "turntable")

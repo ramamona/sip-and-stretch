@@ -375,7 +375,8 @@ struct AvatarPane: View {
     }
 
     private var modelSection: some View {
-        Section {
+        @Bindable var model = model
+        return Section {
             if avatar.modelSlot(for: .model) != nil || avatar.character == .model {
                 modelRow(for: .model)
             } else {
@@ -391,6 +392,7 @@ struct AvatarPane: View {
                 }
             }
             if !avatar.modelSlots.isEmpty {
+                Toggle("Move its arms and legs like a person", isOn: $model.settings.avatar.poseModelBody)
                 Divider()
                 Text("Imported models").font(.rounded(12, .bold)).foregroundStyle(.secondary)
                 ForEach(avatar.modelSlots, id: \.character) { slot in
@@ -409,7 +411,7 @@ struct AvatarPane: View {
         } header: {
             Text("Bring your own 3D model")
         } footer: {
-            Text("For a more realistic look than the built-in shapes, import a detailed model you made, bought or are licensed to use. Pick a character above to give it that character's own model, or import one here for anyone else (then choose its voice below). Models act with their whole body: they lean, lunge, spin, hop and somersault in the style of their voice. USDZ works best because textures are packed inside. Deleting a model only removes the copy stored by this app, never your original file.")
+            Text("For a more realistic look than the built-in shapes, import a detailed model you made, bought or are licensed to use. Pick a character above to give it that character's own model, or import one here for anyone else (then choose its voice below). If the model has a person-shaped skeleton (arms, legs, spine and a head, in a T-pose), it walks, breathes and acts with real joint movement: Kratos chops, Po does kung fu, and so on. Models without one act with their whole body instead (leaning, hopping, spinning). USDZ works best because textures are packed inside. Deleting a model only removes the copy stored by this app, never your original file.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }

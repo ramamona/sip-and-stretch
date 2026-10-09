@@ -100,14 +100,14 @@ extension AvatarRig {
     // MARK: Effects
 
     /// A ring of dust racing outward from the feet, `delay` seconds from now.
-    private func shockwave(after delay: TimeInterval) {
+    private func shockwave(after delay: TimeInterval, size: CGFloat = 3.4) {
         let ring = ringNode(radius: 0.3, pipe: 0.035, 0xFFFFFF, at: vec(0, 0.03, 0))
         ring.opacity = 0
         root.addChildNode(ring)
         ring.runAction(SCNAction.sequence([
             wait(delay),
             SCNAction.fadeOpacity(to: 0.8, duration: 0),
-            SCNAction.group([SCNAction.scale(to: 3.4, duration: 0.45), SCNAction.fadeOut(duration: 0.45)]),
+            SCNAction.group([SCNAction.scale(to: size, duration: 0.45), SCNAction.fadeOut(duration: 0.45)]),
             SCNAction.removeFromParentNode(),
         ]))
     }
@@ -139,6 +139,7 @@ extension AvatarRig {
     // MARK: Signature moves
 
     private func signature() -> TimeInterval {
+        if usesSkeleton { return performSkeletal(.signature) }
         if isModel { return modelSignature() }
         switch character {
         case .kratos:
@@ -247,6 +248,7 @@ extension AvatarRig {
     // MARK: Pleased
 
     private func pleased() -> TimeInterval {
+        if usesSkeleton { return performSkeletal(.pleased) }
         if isModel { return modelPleased() }
         let front = (yawNode, [turn(0, 0, 0, 0.25)])
         switch character {
@@ -299,6 +301,7 @@ extension AvatarRig {
     /// Flushes red, shakes the head, stomps, and (when `turnAway`) turns their back on you.
     private func angry(turnAway: Bool) -> TimeInterval {
         setTint(NSColor(hex: 0xFF3B30), amount: min(0.9, 0.7 + 0.2 * rage))
+        if usesSkeleton { return skeletalAngry(turnAway: turnAway) }
         // A roar: swell up, then a shockwave and a jolt, every time (harder when it's already furious).
         bobNode.runAction(slamSquash(windUp: 0.25, hold: 0.1, impact: 0.12, recover: 0.4), forKey: "squash")
         shockwave(after: 0.35)
@@ -360,6 +363,10 @@ extension AvatarRig {
         if level >= 3 {
             let time = angry(turnAway: false)
             return time
+        }
+        if usesSkeleton {
+            if level >= 2 { setTint(NSColor(hex: 0xFF3B30), amount: 0.25) }
+            return performSkeletal(.grumble(level))
         }
         if isModel { return modelGrumble(level) }
         let hulk = character == .hulk
@@ -554,6 +561,56 @@ extension AvatarRig {
         body += tap
         playBody([(bobNode, body), (yawNode, yaw)])
         return 2.0
+    }
+}
+
+// MARK: - Skeleton-driven models
+//
+// A model whose skeleton was found (see `SkeletonRig`) plays keyframed clips from `SipStretchCore`
+// (`MotionClips.swift`) on its joints, instead of moving as one rigid block.
+
+extension AvatarRig {
+    /// Plays the character's clip for `move` and returns how long it lasts. Heavy moments in the clip
+    /// (a slam, a landing) throw a ring of dust and jolt the ground.
+    @discardableResult
+    fileprivate func performSkeletal(_ move: AvatarMove) -> TimeInterval {
+        guard let driver else { return 0 }
+        let clip: Clip
+        var speed = 1.0
+        var intensity = 1.0
+        switch move {
+        case .signature:
+            clip = motionStyle.signature
+        case .pleased:
+            clip = motionStyle.pleased
+        case .angry:
+            // Every skip makes the tantrum faster and bigger.
+            clip = motionStyle.angry
+            speed = 1 + 0.25 * Double(rage)
+            intensity = 1 + 0.3 * Double(rage)
+        case .grumble(let level):
+            clip = motionStyle.grumble(level: level)
+        }
+        driver.play(clip, speed: speed, intensity: intensity)
+        for event in clip.events {
+            let delay = event.time / speed
+            switch event.kind {
+            case .impact(let strength):
+                shockwave(after: delay, size: 2.2 + CGFloat(strength) * 1.1)
+                if strength >= 0.6 { quake(after: delay) }
+            case .land:
+                shockwave(after: delay, size: 1.8)
+            }
+        }
+        return clip.duration / speed
+    }
+
+    /// The tantrum, then (when leaving) turning their back on you.
+    fileprivate func skeletalAngry(turnAway: Bool) -> TimeInterval {
+        let duration = performSkeletal(.angry)
+        guard turnAway else { return duration }
+        yawNode.runAction(SCNAction.sequence([wait(duration * 0.72), turn(0, 2.8, 0, 0.5)]), forKey: "move")
+        return max(duration, duration * 0.72 + 0.6)
     }
 }
 

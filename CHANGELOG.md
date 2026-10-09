@@ -7,7 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Imported models now move like people.** Models with a person-shaped skeleton (arms, legs, spine and head, in a T-pose, like the Kratos and Kung Fu Panda models) are posed joint by joint instead of being slid around as one rigid block: they lower their arms out of the T-pose, walk with knees, ankles and counter-swinging arms with a stride matched to the walking speed so feet don't skate, breathe and glance around while they wait, and stretch with you. The joints are found from the shape of the skeleton, not bone names. Models without such a skeleton keep the whole-body moves, and **Settings → Avatar → Move its arms and legs like a person** turns the new behaviour off.
+- Every character's gestures were rewritten as keyframed clips with anticipation, follow-through and weight: Kratos coils, raises both hands overhead and chops (twice, harder the second time), Kung Fu Panda bows, drops into a horse stance, throws punches and a high kick, Hulk roars and smashes, the Monkey King crouches, scratches his head and leaps, everyone else waves. Celebrating, sulking, grumbling and the escalating tantrums are in character too, and skipping makes the tantrum faster and bigger. Impacts throw a ring of dust and jolt the ground.
+
 ### Added
+
+- The skeleton animation engine (`Animation.swift`, `Motion.swift`, `MotionClips.swift`) lives in the testable core: keyframes with easing over a flat pose, a procedural walk, idle and stretch, and the gestures as plain text keyframes.
+- `SIPSTRETCH_AVATAR_DEBUG=1` prints which bones were found in a model when you launch the app from a terminal.
 
 - **A 3D avatar with attitude**: when a reminder is due it walks in from the bottom-right corner of the main screen only, performs its signature move, and stands under the nudge card. Finish the task and it celebrates and leaves happy; skip it and it sulks and storms off; ignore it and it gets steadily more impatient, then leaves angry after 10 minutes (configurable). It stretches along during guided stretches. Built with SceneKit from a few dozen primitives, capped at 15/24/30 fps, paused while standing still, and freed after it leaves. Honors Reduce Motion and never takes clicks or focus. New **Avatar** tab in Settings.
 - Avatar characters: Drip, a customizable person (gender, skin tone, hair style and color, outfit and colors, accessories), Robo Buddy, and fan-made Kratos (axe and Blades of Chaos), Kung Fu Panda (kung fu), Wukong (staff) and Hulk (smash and jump), each with its own moves.

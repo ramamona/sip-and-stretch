@@ -33,6 +33,8 @@ struct AvatarLook: Equatable {
     /// The imported model replacing this character's built-in shapes ("" for none).
     var modelFileName: String
     var modelRotation: Int
+    /// Whether to bend the model's skeleton (see `AvatarSettings.poseModelBody`).
+    var poseBody: Bool
     /// Who is talking: imported models have no built-in body language, so their moves follow the voice.
     var voice: Personality
 
@@ -54,6 +56,7 @@ struct AvatarLook: Equatable {
         photoRevision = settings.showsPhotoFace ? settings.photoRevision : nil
         modelFileName = settings.activeModel?.fileName ?? ""
         modelRotation = settings.activeModel?.rotation ?? 0
+        poseBody = settings.poseModelBody
     }
 
     /// The same look with every field a different character wouldn't use zeroed out, so changing
@@ -77,6 +80,7 @@ struct AvatarLook: Equatable {
         }
         if modelFileName.isEmpty {
             look.modelRotation = 0
+            look.poseBody = true
             look.voice = .cheerful
         }
         return look

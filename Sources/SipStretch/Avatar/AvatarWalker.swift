@@ -31,8 +31,6 @@ final class AvatarWalker {
 
     private static let baseWindowSide: CGFloat = 240
     private static let walkYaw: CGFloat = 0.95
-    /// Frame rate for the quiet alive-and-breathing idle animation: slow enough to be nearly free.
-    private static let idleFramesPerSecond = 12
 
     private var phase = Phase.idle
     private var panel: NudgePanel?
@@ -110,7 +108,7 @@ final class AvatarWalker {
         }
 
         newRig.face(yaw: -Self.walkYaw, duration: 0) // walking left, into the screen
-        newRig.startWalking(cycle: cycleTime)
+        newRig.startWalking(cycle: cycleTime, speed: metersPerSecond)
         newPanel.setFrameOrigin(NSPoint(x: startX, y: y))
         newPanel.orderFrontRegardless()
         phase = .walkingIn
@@ -214,7 +212,7 @@ final class AvatarWalker {
         if angry { rig.setTint(NSColor(hex: 0xFF3B30), amount: 0.45) }
         rig.stopActivities(settle: true)
         rig.face(yaw: Self.walkYaw, duration: 0.2) // walking right, out of the screen
-        rig.startWalking(cycle: angry ? cycleTime * 0.85 : cycleTime, mood: angry ? .angry : .happy)
+        rig.startWalking(cycle: angry ? cycleTime * 0.85 : cycleTime, mood: angry ? .angry : .happy, speed: metersPerSecond)
         let target = (screen?.frame.maxX ?? frame.maxX) + 10
         move(from: frame.minX, to: target, y: frame.minY) { [weak self] in
             guard let self, token == self.generation else { return }
@@ -243,6 +241,9 @@ final class AvatarWalker {
     // MARK: Internals
 
     private var reduceMotion: Bool { NSWorkspace.shared.accessibilityDisplayShouldReduceMotion }
+
+    /// How fast it travels in scene metres per second, so a skeleton-driven walk can match its steps to the ground covered.
+    private var metersPerSecond: CGFloat { CGFloat(settings.speed.pointsPerSecond) / pointsPerMeter }
 
     /// Seconds for two steps: quicker steps at higher speeds so feet don't skate.
     private var cycleTime: TimeInterval {
@@ -306,7 +307,7 @@ final class AvatarWalker {
         guard let view else { return }
         if settings.idle == .lively, !reduceMotion, let rig {
             rig.startIdleLife()
-            view.preferredFramesPerSecond = Self.idleFramesPerSecond
+            view.preferredFramesPerSecond = rig.idleFramesPerSecond
             view.isPlaying = true
         } else {
             view.isPlaying = false

@@ -480,9 +480,10 @@ extension AvatarRig {
         return container
     }
 
-    /// Fits the model to the stage (about 1.5 m tall, feet on the ground, centered) and gives it a waddle.
-    /// Its attitude (lunges, spin kicks, somersaults) follows `voice`; see `AvatarRig+Moves.swift`.
-    func buildModel(url: URL, rotationDegrees: Int, voice: Personality) -> Bool {
+    /// Fits the model to the stage (about 1.5 m tall, feet on the ground, centered). If it has a person-shaped
+    /// skeleton, it is posed joint by joint (walking, gesturing, breathing); otherwise it gives it a waddle.
+    /// Its attitude follows `voice`; see `AvatarRig+Moves.swift`.
+    func buildModel(url: URL, rotationDegrees: Int, voice: Personality, poseBody: Bool = true) -> Bool {
         guard let container = Self.loadModelNode(url: url) else { return false }
         let (low, high) = container.boundingBox
         let modelHeight = high.y - low.y
@@ -508,12 +509,31 @@ extension AvatarRig {
         holder.addChildNode(container)
         bobNode.addChildNode(holder)
 
-        // Animations that ship inside the model (walk cycles, idle loops) play while the avatar is active.
-        container.enumerateHierarchy { node, _ in
-            for key in node.animationKeys {
-                guard let player = node.animationPlayer(forKey: key) else { continue }
-                player.animation.repeatCount = .infinity
-                player.play()
+        let style = MotionStyle(personality: voice)
+        let rigid = !poseBody || ProcessInfo.processInfo.environment["SIPSTRETCH_AVATAR_RIGID"] != nil
+        if !rigid, let found = SkeletonRig.make(container: container, rotationDegrees: rotationDegrees, style: style) {
+            // A person-shaped skeleton: pose its joints. Whatever animation the file ships with would fight
+            // that (and exported ones are usually a single frame of the T-pose), so it's switched off.
+            container.enumerateHierarchy { node, _ in
+                for key in node.animationKeys { node.animationPlayer(forKey: key)?.stop() }
+                node.removeAllAnimations()
+            }
+            skeleton = found
+            motionStyle = style
+            legMeters = CGFloat(found.legLength) * scale
+            let poser = PoseDriver(skeleton: found, style: style)
+            driver = poser
+            let driverNode = SCNNode()
+            root.addChildNode(driverNode)
+            driverNode.runAction(SCNAction.repeatForever(SCNAction.customAction(duration: 1) { _, _ in poser.tick() }), forKey: "pose")
+        } else {
+            // No skeleton to pose: animations that ship inside the model (walk cycles, idle loops) play while the avatar is active.
+            container.enumerateHierarchy { node, _ in
+                for key in node.animationKeys {
+                    guard let player = node.animationPlayer(forKey: key) else { continue }
+                    player.animation.repeatCount = .infinity
+                    player.play()
+                }
             }
         }
 
