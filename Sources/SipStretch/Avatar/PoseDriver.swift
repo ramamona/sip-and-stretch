@@ -11,7 +11,7 @@ import SipStretchCore
 ///
 /// `tick()` runs on SceneKit's render thread (it's driven by an action on the scene), while the rest is
 /// called from the main thread, hence the lock.
-final class PoseDriver {
+final class PoseDriver: @unchecked Sendable {
     enum Base {
         case idle
         case walk(cycle: Double, mood: GaitMood, stride: Double?)

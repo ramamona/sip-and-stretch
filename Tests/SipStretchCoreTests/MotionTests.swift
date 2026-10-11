@@ -154,7 +154,7 @@ import Testing
         #expect(MotionStyle(personality: .hulk) == .hulk)
         #expect(MotionStyle(personality: .wukong) == .wukong)
         #expect(MotionStyle(personality: .sassy) == .standard)
-        let durations = [MotionStyle.kratos, .panda, .hulk, .wukong, .standard].map { $0.signature.duration }
-        #expect(Set(durations).count == durations.count, "signature moves shouldn't be copies of each other")
+        let shapes = [MotionStyle.kratos, .panda, .hulk, .wukong, .standard].map { $0.signature.sample(at: 1.0).values }
+        #expect(Set(shapes).count == shapes.count, "signature moves shouldn't be copies of each other")
     }
 }
